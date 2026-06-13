@@ -76,33 +76,35 @@ function MatchesInner() {
                 ) : (
                   <div className="space-y-4">
                     {activeMatches.map((match) => (
-                      <Card key={match.id} bgColor="bg-white/5" padding="p-6" className="border border-white/10">
-                        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-                          <div>
-                            <div className="flex items-center gap-3 mb-1">
-                              <span className="font-display text-lg font-bold text-white">
-                                Match #{match.id?.slice(0, 8)}
-                              </span>
-                              <Badge variant={match.status === 'reveal_requested' ? 'lavender' : 'mint'}>
-                                {match.status === 'reveal_requested' ? 'Reveal Requested' : 'Blind Chat'}
-                              </Badge>
-                            </div>
-                            <p className="text-sm text-white/50">
-                              Matched {new Date(match.matched_at).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}
-                            </p>
-                            {match.expires_at && (
-                              <p className="text-xs text-white/35 mt-0.5">
-                                Expires {new Date(match.expires_at).toLocaleDateString()}
+                      <Link to={match.id ? `/chat/${match.id}` : '#'}>
+                        <Card key={match.id} bgColor="bg-white/5" padding="p-6" className="border border-white/10 hover:border-pink/30 transition-all">
+                          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                            <div>
+                              <div className="flex items-center gap-3 mb-1">
+                                <span className="font-display text-lg font-bold text-white">
+                                  Match #{match.id?.slice(0, 8)}
+                                </span>
+                                <Badge variant={match.status === 'reveal_requested' ? 'lavender' : 'mint'}>
+                                  {match.status === 'reveal_requested' ? 'Reveal Requested' : 'Blind Chat'}
+                                </Badge>
+                              </div>
+                              <p className="text-sm text-white/50">
+                                Matched {new Date(match.matched_at).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}
                               </p>
-                            )}
+                              {match.expires_at && (
+                                <p className="text-xs text-white/35 mt-0.5">
+                                  Expires {new Date(match.expires_at).toLocaleDateString()}
+                                </p>
+                              )}
+                            </div>
+                            <div className="flex items-center gap-3 flex-shrink-0">
+                              <span className="font-display text-2xl font-extrabold text-pink">
+                                {match.compatibility_score}%
+                              </span>
+                            </div>
                           </div>
-                          <div className="flex items-center gap-3 flex-shrink-0">
-                            <span className="font-display text-2xl font-extrabold text-pink">
-                              {match.compatibility_score}%
-                            </span>
-                          </div>
-                        </div>
-                      </Card>
+                        </Card>
+                      </Link>
                     ))}
                   </div>
                 )}

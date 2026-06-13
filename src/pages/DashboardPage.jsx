@@ -1,10 +1,13 @@
 import { Link } from 'react-router-dom';
+import { useState } from 'react';
 import { useProfile } from '../hooks/useProfile';
 import { useMatches } from '../hooks/useMatches';
 import ProtectedRoute from '../components/layout/ProtectedRoute';
 import Button from '../components/ui/Button';
 import Card from '../components/ui/Card';
 import Skeleton from '../components/ui/Skeleton';
+import { supabase } from '../lib/supabase';
+import { useToast } from '../hooks/useToast';
 
 function ProgressRing({ percent, size = 56, stroke = 4 }) {
   const radius = (size - stroke) / 2;
@@ -62,7 +65,9 @@ function getProfileCompletion(profile) {
 
 function DashboardInner() {
   const { profile } = useProfile();
-  const { matches, loading: matchesLoading } = useMatches();
+  const { matches, loading: matchesLoading, refetch: refetchMatches } = useMatches();
+  const toast = useToast();
+  const [finding, setFinding] = useState(false);
 
   const activeMatches = matches.filter((m) => ['active', 'reveal_requested'].includes(m.status));
   const completionPercent = getProfileCompletion(profile);
@@ -128,33 +133,57 @@ function DashboardInner() {
                     No active matches yet
                   </p>
                   <p className="text-sm text-white/40 mb-6">
-                    Complete your personality quiz to get matched!
+                    Find your first match now!
                   </p>
-                  <Link to={profile?.onboarding_completed ? '/profile/edit' : '/profile/setup'}>
-                    <Button variant="primary" size="md">
-                      {profile?.onboarding_completed ? 'Modify Profile' : 'Complete Profile'}
+                  <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
+                    <Button
+                      variant="primary"
+                      size="md"
+                      loading={finding}
+                      onClick={async () => {
+                        setFinding(true);
+                        try {
+                          const { error } = await supabase.functions.invoke('run-matching');
+                          if (error) throw error;
+                          toast.success('New match found! Check your matches.');
+                          refetchMatches();
+                        } catch (err) {
+                          toast.error(err.message || 'No compatible users found yet. Try again later.');
+                        } finally {
+                          setFinding(false);
+                        }
+                      }}
+                    >
+                      Find Matches
                     </Button>
-                  </Link>
+                    <Link to={profile?.onboarding_completed ? '/profile/edit' : '/profile/setup'}>
+                      <Button variant="ghost" size="md">
+                        {profile?.onboarding_completed ? 'Modify Profile' : 'Complete Profile'}
+                      </Button>
+                    </Link>
+                  </div>
                 </div>
               </Card>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 {activeMatches.slice(0, 6).map((match) => (
                   <Card key={match.id} bgColor="bg-white/5" padding="p-6" className="border border-white/10">
-                    <div className="flex items-center justify-between mb-3">
-                      <span className="font-display text-sm font-bold text-white">
-                        Match #{match.id?.slice(0, 6)}
-                      </span>
-                      <span className="text-xs font-bold text-white bg-pink px-2.5 py-1 rounded-full shadow-sm">
-                        {match.compatibility_score}%
-                      </span>
-                    </div>
-                    <p className="text-sm text-white/50 mb-1">
-                      {match.status === 'reveal_requested' ? '✨ Reveal requested' : '💬 Blind chat active'}
-                    </p>
-                    <p className="text-xs text-white/35">
-                      Matched {new Date(match.matched_at).toLocaleDateString()}
-                    </p>
+                    <Link to={match.id ? `/chat/${match.id}` : '#'} className="block">
+                      <div className="flex items-center justify-between mb-3">
+                        <span className="font-display text-sm font-bold text-white">
+                          Match #{match.id?.slice(0, 6)}
+                        </span>
+                        <span className="text-xs font-bold text-white bg-pink px-2.5 py-1 rounded-full shadow-sm">
+                          {match.compatibility_score}%
+                        </span>
+                      </div>
+                      <p className="text-sm text-white/50 mb-1">
+                        {match.status === 'reveal_requested' ? '✨ Reveal requested' : '💬 Blind chat active'}
+                      </p>
+                      <p className="text-xs text-white/35">
+                        Matched {new Date(match.matched_at).toLocaleDateString()}
+                      </p>
+                    </Link>
                   </Card>
                 ))}
               </div>
