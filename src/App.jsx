@@ -12,6 +12,7 @@ const ProfileSetupPage = lazy(() => import('./pages/ProfileSetupPage'))
 const ProfileEditPage = lazy(() => import('./pages/ProfileEditPage'))
 const PersonalityQuizPage = lazy(() => import('./pages/PersonalityQuizPage'))
 const BlogPage = lazy(() => import('./pages/BlogPage'))
+const BlogPostPage = lazy(() => import('./pages/BlogPostPage'))
 const AboutPage = lazy(() => import('./pages/AboutPage'))
 const PricingPage = lazy(() => import('./pages/PricingPage'))
 const ContactPage = lazy(() => import('./pages/ContactPage'))
@@ -47,6 +48,7 @@ export default function App() {
           <Route path="/profile/edit" element={<ProfileEditPage />} />
           <Route path="/personality-quiz" element={<PersonalityQuizPage />} />
           <Route path="/blog" element={<BlogPage />} />
+          <Route path="/blog/:slug" element={<BlogPostPage />} />
           <Route path="/about" element={<AboutPage />} />
           <Route path="/pricing" element={<PricingPage />} />
           <Route path="/contact" element={<ContactPage />} />
