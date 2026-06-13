@@ -12,7 +12,6 @@ const plans = [
     yearlyPrice: 1999,
     popular: false,
     features: [
-      '1 match per week',
       'Basic personality quiz',
       'Standard matching algorithm will match you',
       'Profile verification',
@@ -29,7 +28,6 @@ const plans = [
     yearlyPrice: 3999,
     popular: true,
     features: [
-      'Unlimited matches',
       'Priority matching queue',
       'Advanced quiz insights',
       'Profile boost monthly',
