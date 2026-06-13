@@ -28,6 +28,19 @@ serve(async (req) => {
       )
     }
 
+    const { data: profile, error: profileError } = await supabaseClient
+      .from('profiles')
+      .select('is_admin')
+      .eq('id', user.id)
+      .single()
+
+    if (profileError || !profile?.is_admin) {
+      return new Response(
+        JSON.stringify({ error: 'Forbidden — admin access required' }),
+        { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      )
+    }
+
     const { action, verificationId, userId, planName, period } = await req.json()
 
     if (!action || !verificationId) {

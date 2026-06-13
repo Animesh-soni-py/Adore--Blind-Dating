@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
 import * as yup from 'yup';
@@ -26,6 +26,7 @@ export default function LoginForm() {
   const [loading, setLoading] = useState(false);
   const [showForgot, setShowForgot] = useState(false);
   const [resetLoading, setResetLoading] = useState(false);
+  const [cooldown, setCooldown] = useState(0);
   const from = location.state?.from?.pathname || '/dashboard';
 
   const {
@@ -62,14 +63,21 @@ export default function LoginForm() {
     }
   }
 
+  useEffect(() => {
+    if (cooldown <= 0) return;
+    const id = setInterval(() => setCooldown((c) => c - 1), 1000);
+    return () => clearInterval(id);
+  }, [cooldown]);
+
   async function onResetPassword(data) {
     try {
       setResetLoading(true);
-      const { error } = await supabase.auth.resetPasswordForEmail(data.resetEmail, {
-        redirectTo: `${window.location.origin}/login`,
+      const { data: fnData, error: fnError } = await supabase.functions.invoke('forgot-password', {
+        body: { email: data.resetEmail, siteUrl: window.location.origin },
       });
-      if (error) throw error;
+      if (fnError) throw fnError;
       toast.success('Password reset link sent to your email!');
+      setCooldown(60);
       setShowForgot(false);
     } catch (err) {
       toast.error(err.message || 'Failed to send reset email. Please try again.');
@@ -102,8 +110,9 @@ export default function LoginForm() {
               size="lg"
               className="w-full mt-5"
               loading={resetLoading}
+              disabled={cooldown > 0}
             >
-              Send Reset Link
+              {cooldown > 0 ? `Try again in ${cooldown}s` : 'Send Reset Link'}
             </Button>
           </form>
         </div>

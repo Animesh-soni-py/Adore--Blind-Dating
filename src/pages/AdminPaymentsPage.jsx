@@ -4,7 +4,7 @@ import { useAuth } from '../hooks/useAuth';
 import Button from '../components/ui/Button';
 
 export default function AdminPaymentsPage() {
-  const { user, isAuthenticated, refreshProfile } = useAuth();
+  const { user, profile, isAuthenticated, refreshProfile } = useAuth();
   const [payments, setPayments] = useState([]);
   const [loading, setLoading] = useState(true);
   const [verifyingId, setVerifyingId] = useState(null);
@@ -62,10 +62,10 @@ export default function AdminPaymentsPage() {
     }
   }
 
-  if (!isAuthenticated) {
+  if (!isAuthenticated || !profile?.is_admin) {
     return (
       <main className="pt-[72px] min-h-screen flex items-center justify-center" style={{ background: '#0F0A1E' }} id="main-content">
-        <p className="text-white/40 font-body">Sign in as admin to access this page.</p>
+        <p className="text-white/40 font-body">Admin access required. Sign in with an admin account.</p>
       </main>
     );
   }

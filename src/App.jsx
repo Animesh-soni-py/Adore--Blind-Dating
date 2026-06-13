@@ -18,6 +18,7 @@ const ContactPage = lazy(() => import('./pages/ContactPage'))
 const HowItWorksPage = lazy(() => import('./pages/HowItWorksPage'))
 const CitySelectionPage = lazy(() => import('./pages/CitySelectionPage'))
 const AdminPaymentsPage = lazy(() => import('./pages/AdminPaymentsPage'))
+const ResetPasswordPage = lazy(() => import('./pages/ResetPasswordPage'))
 const NotFoundPage = lazy(() => import('./pages/NotFoundPage'))
 
 function PageLoader() {
@@ -37,6 +38,7 @@ export default function App() {
       <Routes>
         <Route path="/login" element={<LoginPage />} />
         <Route path="/signup" element={<SignupPage />} />
+        <Route path="/reset-password" element={<ResetPasswordPage />} />
         <Route element={<Layout />}>
           <Route path="/" element={<HomePage />} />
           <Route path="/dashboard" element={<DashboardPage />} />
