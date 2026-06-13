@@ -147,7 +147,7 @@ export default function PaymentModal({ isOpen, onClose, plan }) {
           </div>
 
           <div className="flex gap-3">
-            <Button variant="ghost" size="lg" className="flex-1" onClick={goBack}>
+            <Button variant="ghost" size="lg" className="flex-1 bg-lavender-light/40 border-2 border-dark/20 text-dark font-bold" onClick={goBack}>
               ← Back
             </Button>
             <Button variant="primary" size="lg" className="flex-1" onClick={goNext}>
@@ -184,7 +184,7 @@ export default function PaymentModal({ isOpen, onClose, plan }) {
           </div>
 
           <div className="flex gap-3">
-            <Button variant="ghost" size="lg" className="flex-1" onClick={goBack}>
+            <Button variant="ghost" size="lg" className="flex-1 bg-lavender-light/40 border-2 border-dark/20 text-dark font-bold" onClick={goBack}>
               ← Back
             </Button>
             <Button
