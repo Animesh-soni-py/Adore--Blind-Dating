@@ -8,8 +8,8 @@ const plans = [
   {
     name: 'Standard',
     emoji: '💕',
-    monthlyPrice: 1,
-    yearlyPrice: 1,
+    monthlyPrice: 199,
+    yearlyPrice: 1999,
     popular: false,
     features: [
       '3 matches per week',
@@ -25,8 +25,8 @@ const plans = [
   {
     name: 'Premium',
     emoji: '💘',
-    monthlyPrice: 1,
-    yearlyPrice: 1,
+    monthlyPrice: 299,
+    yearlyPrice: 2999,
     popular: true,
     features: [
       'Unlimited matches',
