@@ -230,18 +230,26 @@ const categoryIcons = {
   travel_style: '✈️',
 };
 
+const QUESTIONS_PER_PAGE = 4;
+
 function QuizInner() {
   const { profile, submitQuizAnswers, updateProfile, loading: profileLoading } = useProfile();
   const navigate = useNavigate();
   const toast = useToast();
-  const [step, setStep] = useState(0);
   const [answers, setAnswers] = useState({});
   const [submitting, setSubmitting] = useState(false);
+  const [visibleCount, setVisibleCount] = useState(QUESTIONS_PER_PAGE);
   const containerRef = useRef(null);
 
-  const current = questions[step];
-  const progress = ((step + 1) / questions.length) * 100;
-  const isLast = step === questions.length - 1;
+  const totalQuestions = questions.length;
+  const allVisible = visibleCount >= totalQuestions;
+  const answeredCount = questions.filter((q) => {
+    const a = answers[q.key];
+    if (!a) return false;
+    if (q.type === 'multiselect') return Array.isArray(a) && a.length > 0;
+    return true;
+  }).length;
+  const progress = (answeredCount / totalQuestions) * 100;
 
   const getAnswer = useCallback((key) => answers[key] ?? null, [answers]);
 
@@ -251,9 +259,6 @@ function QuizInner() {
 
   function handleSelect(key, value) {
     setAnswer(key, value);
-    if (step < questions.length - 1) {
-      setTimeout(() => setStep((s) => s + 1), 250);
-    }
   }
 
   function handleMultiselect(key, value) {
@@ -265,29 +270,12 @@ function QuizInner() {
     }
   }
 
-  function handleNext() {
-    if (isLast) {
-      handleSubmit();
-    } else {
-      setStep((s) => s + 1);
-      containerRef.current?.scrollTo({ top: 0, behavior: 'smooth' });
-    }
+  function handleShowMore() {
+    setVisibleCount((prev) => Math.min(prev + QUESTIONS_PER_PAGE, totalQuestions));
   }
 
-  function handleBack() {
-    if (step > 0) {
-      setStep((s) => s - 1);
-      containerRef.current?.scrollTo({ top: 0, behavior: 'smooth' });
-    }
-  }
-
-  function canProceed() {
-    const answer = getAnswer(current.key);
-    if (!answer) return false;
-    if (current.type === 'multiselect') {
-      return Array.isArray(answer) && answer.length > 0;
-    }
-    return true;
+  function allRequiredAnswered() {
+    return answeredCount === totalQuestions;
   }
 
   async function handleSubmit() {
@@ -310,7 +298,7 @@ function QuizInner() {
         onboarding_data: { ...currentOnboarding, quiz_answers: quizSummary },
       });
 
-      toast.success('Personality quiz completed! 🎉');
+      toast.success('Personality quiz completed!');
       navigate('/dashboard', { replace: true });
     } catch (err) {
       toast.error(err.message || 'Failed to save quiz answers');
@@ -329,12 +317,12 @@ function QuizInner() {
         <div className="container-adore py-8 lg:py-12 max-w-[640px] mx-auto">
           {/* Header */}
           <div className="text-center mb-8">
-            <span className="text-5xl block mb-4">{categoryIcons[current.key] || '📝'}</span>
+            <span className="text-5xl block mb-4">📝</span>
             <h1 className="font-display text-3xl md:text-4xl font-extrabold text-white tracking-normal italic">
               Personality Quiz
             </h1>
             <p className="font-body text-base text-white/50 mt-2">
-              Question {step + 1} of {questions.length}
+              {answeredCount} of {totalQuestions} answered
             </p>
           </div>
 
@@ -346,109 +334,116 @@ function QuizInner() {
             />
           </div>
 
-          {/* Question Card */}
-          <div className="bg-white/5 rounded-2xl border border-white/10 p-6 md:p-8">
-            <h2 className="font-display text-xl md:text-2xl font-bold text-white mb-2">
-              {current.question}
-            </h2>
-            {current.subtitle && (
-              <p className="font-body text-sm text-white/40 mb-6">{current.subtitle}</p>
-            )}
-
-            {/* Select Type */}
-            {current.type === 'select' && (
-              <div className="space-y-3 mt-6">
-                {current.options.map((opt) => (
-                  <button
-                    key={opt.value}
-                    type="button"
-                    onClick={() => handleSelect(current.key, opt.value)}
-                    className={`w-full text-left px-5 py-4 rounded-xl border-[1.5px] text-base font-medium transition-all duration-200 ${
-                      getAnswer(current.key) === opt.value
-                        ? 'border-pink bg-pink/10 text-pink shadow-glow-pink'
-                        : 'border-white/10 text-white/60 hover:border-white/20 hover:bg-white/5 hover:text-white'
-                    }`}
-                  >
-                    {opt.label}
-                  </button>
-                ))}
-              </div>
-            )}
-
-            {/* Multiselect Type */}
-            {current.type === 'multiselect' && (
-              <div className="space-y-3 mt-6">
-                {current.options.map((opt) => {
-                  const selected = (getAnswer(current.key) || []).includes(opt.value);
-                  return (
-                    <button
-                      key={opt.value}
-                      type="button"
-                      onClick={() => handleMultiselect(current.key, opt.value)}
-                      className={`w-full text-left px-5 py-4 rounded-xl border-[1.5px] text-base font-medium transition-all duration-200 ${
-                        selected
-                          ? 'border-pink bg-pink/10 text-pink shadow-glow-pink'
-                          : 'border-white/10 text-white/60 hover:border-white/20 hover:bg-white/5 hover:text-white'
-                      }`}
-                    >
-                      {selected ? '✓ ' : ''}{opt.label}
-                    </button>
-                  );
-                })}
-              </div>
-            )}
-
-            {/* Scale Type */}
-            {current.type === 'scale' && (
-              <div className="mt-6">
-                <div className="flex items-center justify-between mb-3">
-                  <span className="text-sm text-white/40 font-body">{current.leftLabel}</span>
-                  <span className="text-sm text-white/40 font-body">{current.rightLabel}</span>
+          {/* Questions */}
+          <div className="space-y-6">
+            {questions.slice(0, visibleCount).map((q, idx) => (
+              <div key={q.key} className="bg-white/5 rounded-2xl border border-white/10 p-6 md:p-8">
+                <div className="flex items-center gap-2 mb-1">
+                  <span className="text-lg">{categoryIcons[q.key] || '📝'}</span>
+                  <span className="text-xs text-white/30 font-body">Question {idx + 1}</span>
                 </div>
-                <div className="flex gap-2 justify-center">
-                  {Array.from({ length: current.max }, (_, i) => i + 1).map((val) => (
-                    <button
-                      key={val}
-                      type="button"
-                      onClick={() => setAnswer(current.key, val)}
-                      className={`w-12 h-12 rounded-full text-lg font-bold transition-all duration-200 ${
-                        getAnswer(current.key) === val
-                          ? 'bg-pink text-white shadow-glow-pink scale-110'
-                          : 'bg-white/10 text-white/40 hover:bg-white/20 hover:text-white'
-                      }`}
-                    >
-                      {val}
-                    </button>
-                  ))}
-                </div>
-                <div className="flex items-center justify-between mt-2">
-                  <span className="text-xs text-white/30 font-body">1</span>
-                  <span className="text-xs text-white/30 font-body">{current.max}</span>
-                </div>
+                <h2 className="font-display text-lg md:text-xl font-bold text-white mb-2">
+                  {q.question}
+                </h2>
+                {q.subtitle && (
+                  <p className="font-body text-sm text-white/40 mb-4">{q.subtitle}</p>
+                )}
+
+                {/* Select Type */}
+                {q.type === 'select' && (
+                  <div className="space-y-2 mt-4">
+                    {q.options.map((opt) => (
+                      <button
+                        key={opt.value}
+                        type="button"
+                        onClick={() => handleSelect(q.key, opt.value)}
+                        className={`w-full text-left px-4 py-3 rounded-xl border-[1.5px] text-sm font-medium transition-all duration-200 ${
+                          getAnswer(q.key) === opt.value
+                            ? 'border-pink bg-pink/10 text-pink shadow-glow-pink'
+                            : 'border-white/10 text-white/60 hover:border-white/20 hover:bg-white/5 hover:text-white'
+                        }`}
+                      >
+                        {opt.label}
+                      </button>
+                    ))}
+                  </div>
+                )}
+
+                {/* Multiselect Type */}
+                {q.type === 'multiselect' && (
+                  <div className="space-y-2 mt-4">
+                    {q.options.map((opt) => {
+                      const selected = (getAnswer(q.key) || []).includes(opt.value);
+                      return (
+                        <button
+                          key={opt.value}
+                          type="button"
+                          onClick={() => handleMultiselect(q.key, opt.value)}
+                          className={`w-full text-left px-4 py-3 rounded-xl border-[1.5px] text-sm font-medium transition-all duration-200 ${
+                            selected
+                              ? 'border-pink bg-pink/10 text-pink shadow-glow-pink'
+                              : 'border-white/10 text-white/60 hover:border-white/20 hover:bg-white/5 hover:text-white'
+                          }`}
+                        >
+                          {selected ? '✓ ' : ''}{opt.label}
+                        </button>
+                      );
+                    })}
+                  </div>
+                )}
+
+                {/* Scale Type */}
+                {q.type === 'scale' && (
+                  <div className="mt-4">
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="text-xs text-white/40 font-body">{q.leftLabel}</span>
+                      <span className="text-xs text-white/40 font-body">{q.rightLabel}</span>
+                    </div>
+                    <div className="flex gap-2 justify-center">
+                      {Array.from({ length: q.max }, (_, i) => i + 1).map((val) => (
+                        <button
+                          key={val}
+                          type="button"
+                          onClick={() => setAnswer(q.key, val)}
+                          className={`w-10 h-10 rounded-full text-base font-bold transition-all duration-200 ${
+                            getAnswer(q.key) === val
+                              ? 'bg-pink text-white shadow-glow-pink scale-110'
+                              : 'bg-white/10 text-white/40 hover:bg-white/20 hover:text-white'
+                          }`}
+                        >
+                          {val}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </div>
-            )}
+            ))}
           </div>
 
-          {/* Navigation */}
-          <div className="flex items-center justify-between mt-8">
-            <Button
-              variant="ghost"
-              size="md"
-              onClick={handleBack}
-              disabled={step === 0}
-            >
-              ← Back
-            </Button>
+          {/* Show More / Submit */}
+          <div className="flex flex-col items-center mt-8 gap-4">
+            {!allVisible && (
+              <Button
+                variant="ghost"
+                size="md"
+                onClick={handleShowMore}
+              >
+                Show More Questions ↓
+              </Button>
+            )}
 
-            <Button
-              variant="primary"
-              size="lg"
-              onClick={handleNext}
-              disabled={!canProceed() || submitting || profileLoading}
-              loading={submitting}
-            >
-              {isLast ? 'Complete Quiz' : 'Next →'}
-            </Button>
+            {allVisible && (
+              <Button
+                variant="primary"
+                size="lg"
+                onClick={handleSubmit}
+                disabled={!allRequiredAnswered() || submitting || profileLoading}
+                loading={submitting}
+              >
+                {allRequiredAnswered() ? 'Complete Quiz' : `Answer all questions (${totalQuestions - answeredCount} remaining)`}
+              </Button>
+            )}
           </div>
         </div>
       </main>

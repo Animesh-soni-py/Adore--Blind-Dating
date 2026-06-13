@@ -154,7 +154,7 @@ function DashboardInner() {
                         }
                       }}
                     >
-                      Find Matches
+                      View Your Match
                     </Button>
                     <Link to={profile?.onboarding_completed ? '/profile/edit' : '/profile/setup'}>
                       <Button variant="ghost" size="md">

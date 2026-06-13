@@ -12,9 +12,9 @@ const plans = [
     yearlyPrice: 1999,
     popular: false,
     features: [
-      '3 matches per week',
+      '1 match per week',
       'Basic personality quiz',
-      'Standard matching algorithm',
+      'Standard matching algorithm will match you',
       'Profile verification',
       'Community access',
     ],
@@ -25,8 +25,8 @@ const plans = [
   {
     name: 'Premium',
     emoji: '💘',
-    monthlyPrice: 299,
-    yearlyPrice: 2999,
+    monthlyPrice: 399,
+    yearlyPrice: 3999,
     popular: true,
     features: [
       'Unlimited matches',
@@ -34,6 +34,7 @@ const plans = [
       'Advanced quiz insights',
       'Profile boost monthly',
       'Read receipts',
+      'Professional dating coach',
       'Premium support',
     ],
     cta: 'Go Premium',

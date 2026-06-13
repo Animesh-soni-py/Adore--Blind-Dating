@@ -73,6 +73,19 @@ export default function PaymentModal({ isOpen, onClose, plan }) {
           )}
         </div>
 
+        {/* Instructions */}
+        <div className="bg-amber/5 border border-amber/20 rounded-xl p-4 space-y-2">
+          <p className="text-xs font-bold text-amber font-body uppercase tracking-wide">How to Pay</p>
+          <ol className="text-xs text-dark/60 font-body space-y-1.5 list-decimal list-inside">
+            <li>Take a screenshot of the QR code below (or note the UPI ID)</li>
+            <li>Open any UPI app (Google Pay, PhonePe, Paytm, BHIM)</li>
+            <li>Scan the QR or enter the UPI ID manually</li>
+            <li>Pay exactly <strong>₹{plan.price}</strong></li>
+            <li>Copy the <strong>UTR (Transaction Reference)</strong> number from the payment success screen</li>
+            <li>Paste the UTR below and click "Submit for Verification"</li>
+          </ol>
+        </div>
+
         {/* UPI QR */}
         <div className="text-center space-y-3">
           <p className="text-sm font-semibold text-dark font-body">Scan & Pay with any UPI app</p>
