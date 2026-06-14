@@ -84,3 +84,19 @@ export function timeAgo(dateString) {
   }
   return 'just now';
 }
+
+const badWords = [
+  'fuck', 'shit', 'ass', 'bitch', 'damn', 'bastard', 'crap', 'dick',
+  'piss', 'slut', 'whore', 'cock', 'cunt', 'motherfucker', 'nigga',
+  'nigger', 'porn', 'sex', 'fucking', 'bullshit', 'asshole', 'bollocks',
+  'arse', 'bloody', 'wanker', 'prick', 'twat', 'douche',
+];
+
+export function containsProfanity(text) {
+  if (!text) return false;
+  const lower = text.toLowerCase();
+  return badWords.some((word) => {
+    const regex = new RegExp(`\\b${word}\\b`, 'i');
+    return regex.test(lower);
+  });
+}

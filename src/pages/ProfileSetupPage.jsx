@@ -6,6 +6,7 @@ import ProtectedRoute from '../components/layout/ProtectedRoute';
 import Button from '../components/ui/Button';
 import { useToast } from '../hooks/useToast';
 import PhotoUpload from '../components/profile/PhotoUpload';
+import { containsProfanity } from '../lib/utils';
 
 // ── All 23 onboarding steps ─────────────────────────────────────────
 const onboardingSteps = [
@@ -13,7 +14,7 @@ const onboardingSteps = [
   { key: 'photo', category: 'Basic Details', catIndex: 1, catTotal: 4, type: 'photo', label: 'Add your best photo' },
   { key: 'dateOfBirth', category: 'Basic Details', catIndex: 2, catTotal: 4, type: 'date', label: "What's your date of birth?" },
   { key: 'gender', category: 'Basic Details', catIndex: 3, catTotal: 4, type: 'select', label: 'What\'s your gender?', options: ['Man', 'Woman', 'Non-binary', 'Prefer not to say'] },
-  { key: 'city', category: 'Basic Details', catIndex: 4, catTotal: 4, type: 'text', label: 'Which city are you in?', placeholder: 'e.g. Jabalpur' },
+  { key: 'locality', category: 'Basic Details', catIndex: 4, catTotal: 4, type: 'text', label: 'Which locality in Jabalpur?', placeholder: 'e.g. Vijay Nagar, Adhartal, Ranjhi, Gorakhpur...' },
 
   // CONTACT & SOCIAL (5-6)
   { key: 'whatsapp', category: 'Contact & Social', catIndex: 1, catTotal: 2, type: 'text', label: 'Your WhatsApp number', placeholder: '+91 98765 43210', subtext: 'We\'ll use this only for match notifications' },
@@ -103,28 +104,66 @@ function DateStep({ value, onChange }) {
 }
 
 function TextStep({ value, onChange, placeholder }) {
+  const [error, setError] = useState('');
+
+  function handleChange(e) {
+    const val = e.target.value;
+    if (containsProfanity(val)) {
+      setError('Please be polite — no inappropriate language.');
+    } else {
+      setError('');
+    }
+    onChange(val);
+  }
+
   return (
-    <input
-      type="text"
-      value={value || ''}
-      onChange={(e) => onChange(e.target.value)}
-      placeholder={placeholder}
-      className="w-full px-5 py-4 rounded-xl border-[1.5px] border-white/10 bg-white/5 font-body text-lg text-white placeholder:text-white/25 focus:outline-none focus:border-pink/50 focus:bg-white/[0.08] transition-all"
-      autoFocus
-    />
+    <div>
+      <input
+        type="text"
+        value={value || ''}
+        onChange={handleChange}
+        placeholder={placeholder}
+        className={`w-full px-5 py-4 rounded-xl border-[1.5px] bg-white/5 font-body text-lg text-white placeholder:text-white/25 focus:outline-none focus:bg-white/[0.08] transition-all ${
+          error ? 'border-pink' : 'border-white/10 focus:border-pink/50'
+        }`}
+        autoFocus
+      />
+      {error && (
+        <p className="text-xs text-pink font-medium mt-2" role="alert">{error}</p>
+      )}
+    </div>
   );
 }
 
 function TextareaStep({ value, onChange, placeholder }) {
+  const [error, setError] = useState('');
+
+  function handleChange(e) {
+    const val = e.target.value;
+    if (containsProfanity(val)) {
+      setError('Please be polite — no inappropriate language.');
+    } else {
+      setError('');
+    }
+    onChange(val);
+  }
+
   return (
-    <textarea
-      value={value || ''}
-      onChange={(e) => onChange(e.target.value)}
-      placeholder={placeholder}
-      rows={4}
-      className="w-full px-5 py-4 rounded-xl border-[1.5px] border-white/10 bg-white/5 font-body text-lg text-white placeholder:text-white/25 resize-none focus:outline-none focus:border-pink/50 focus:bg-white/[0.08] transition-all"
-      autoFocus
-    />
+    <div>
+      <textarea
+        value={value || ''}
+        onChange={handleChange}
+        placeholder={placeholder}
+        rows={4}
+        className={`w-full px-5 py-4 rounded-xl border-[1.5px] bg-white/5 font-body text-lg text-white placeholder:text-white/25 resize-none focus:outline-none focus:bg-white/[0.08] transition-all ${
+          error ? 'border-pink' : 'border-white/10 focus:border-pink/50'
+        }`}
+        autoFocus
+      />
+      {error && (
+        <p className="text-xs text-pink font-medium mt-2" role="alert">{error}</p>
+      )}
+    </div>
   );
 }
 
@@ -252,7 +291,7 @@ function SetupInner() {
     const savedCity = sessionStorage.getItem('selectedCity');
     if (savedCity) {
       sessionStorage.removeItem('selectedCity');
-      return { city: savedCity };
+      return { locality: savedCity };
     }
     return {};
   }
@@ -264,7 +303,7 @@ function SetupInner() {
     if (profile.date_of_birth) prefill.dateOfBirth = profile.date_of_birth.substring(0, 10);
     if (profile.gender) prefill.gender = profile.gender.charAt(0).toUpperCase() + profile.gender.slice(1).replace('-', ' ');
     if (profile.seeking) prefill.seeking = profile.seeking.charAt(0).toUpperCase() + profile.seeking.slice(1);
-    if (profile.city) prefill.city = profile.city;
+    if (profile.city) prefill.locality = profile.city;
     if (profile.bio) prefill.bio = profile.bio;
     if (profile.interests) prefill.interests = profile.interests;
     if (profile.onboarding_data) {
@@ -331,7 +370,7 @@ function SetupInner() {
         date_of_birth: answers.dateOfBirth || null,
         gender: answers.gender?.toLowerCase().replace(/\s+/g, '-') || null,
         seeking: answers.seeking?.toLowerCase() || null,
-        city: answers.city || null,
+        city: answers.locality || null,
         bio: answers.threeWords || null,
         interests: answers.interests || [],
       };
