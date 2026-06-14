@@ -102,7 +102,7 @@ export default function Navbar() {
       <nav
         className={cn(
           'fixed top-0 left-0 right-0 z-50 transition-all duration-300',
-          (scrolled || location.pathname !== '/') ? 'nav-glass shadow-lg shadow-pink/5' : 'bg-transparent'
+          (scrolled || location.pathname !== '/') ? 'nav-blur-dark border-b border-white/10 shadow-card-soft' : 'bg-transparent'
         )}
         role="navigation"
         aria-label="Main navigation"

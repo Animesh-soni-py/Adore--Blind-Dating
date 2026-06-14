@@ -303,13 +303,6 @@
     background: rgba(15, 10, 30, 0.85);
   }
 
-  .nav-glass {
-    backdrop-filter: blur(24px);
-    -webkit-backdrop-filter: blur(24px);
-    background: rgba(15, 10, 30, 0.35);
-    border-bottom: 1px solid rgba(200, 168, 240, 0.08);
-  }
-
   /* ── Text Gradient ── */
   .text-gradient-pink {
     background: linear-gradient(135deg, #FF5E8A 0%, #C8A8F0 100%);
@@ -375,10 +368,7 @@
   50% { background-position: 100% 50%; }
 }
 
-@keyframes gradient-scroll {
-  0% { background-position: 50% 0%; }
-  100% { background-position: 50% 100%; }
-}
+
 
 /* ═══════════════════════════════════════
    REDUCED MOTION
