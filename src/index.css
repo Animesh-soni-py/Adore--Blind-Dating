@@ -298,9 +298,9 @@
   }
 
   .nav-blur-dark {
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
-    background: rgba(15, 10, 30, 0.85);
+    backdrop-filter: blur(24px);
+    -webkit-backdrop-filter: blur(24px);
+    background: rgba(15, 10, 30, 0.55);
   }
 
   /* ── Text Gradient ── */

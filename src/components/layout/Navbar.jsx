@@ -20,6 +20,7 @@ function isLinkActive(linkHref, currentPath) {
 export default function Navbar() {
   const [scrolled, setScrolled] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [signOutConfirm, setSignOutConfirm] = useState(false);
   const { isAuthenticated, profile, signOut } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
@@ -161,7 +162,7 @@ export default function Navbar() {
                     variant="ghost"
                     size="sm"
                     className="transition-colors text-white border-white/30 hover:border-white/60 hover:bg-white/10"
-                    onClick={signOut}
+                    onClick={() => setSignOutConfirm(true)}
                   >
                     Sign Out
                   </Button>
@@ -252,7 +253,7 @@ export default function Navbar() {
                     <Link to="/dashboard">
                       <Button variant="primary" size="lg" className="w-full">Dashboard</Button>
                     </Link>
-                    <Button variant="ghost" size="lg" className="w-full" onClick={signOut}>
+                    <Button variant="ghost" size="lg" className="w-full" onClick={() => setSignOutConfirm(true)}>
                       Sign Out
                     </Button>
                   </>
@@ -268,6 +269,54 @@ export default function Navbar() {
                 )}
               </motion.div>
             </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Sign Out Confirmation */}
+      <AnimatePresence>
+        {signOutConfirm && (
+          <motion.div
+            className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-dark/60 backdrop-blur-sm"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={() => setSignOutConfirm(false)}
+          >
+            <motion.div
+              className="w-full max-w-sm bg-dark border border-white/10 rounded-2xl p-6"
+              initial={{ scale: 0.95, opacity: 0, y: 20 }}
+              animate={{ scale: 1, opacity: 1, y: 0 }}
+              exit={{ scale: 0.95, opacity: 0, y: 20 }}
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="text-center mb-6">
+                <span className="text-4xl block mb-3">👋</span>
+                <h3 className="font-display text-lg font-bold text-white mb-1">Leave already?</h3>
+                <p className="text-sm text-white/50">Are you sure you want to sign out?</p>
+              </div>
+              <div className="flex gap-3">
+                <Button
+                  variant="ghost"
+                  size="lg"
+                  className="flex-1 text-white border-white/20 hover:bg-white/10"
+                  onClick={() => setSignOutConfirm(false)}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  variant="primary"
+                  size="lg"
+                  className="flex-1"
+                  onClick={() => {
+                    setSignOutConfirm(false);
+                    signOut();
+                  }}
+                >
+                  Sign Out
+                </Button>
+              </div>
+            </motion.div>
           </motion.div>
         )}
       </AnimatePresence>
