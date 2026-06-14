@@ -29,11 +29,11 @@ export default function AdminPaymentsPage() {
     }
   }
 
-  async function handleVerify(id, userId, planName, period) {
+  async function handleVerify(id, userId, planName) {
     try {
       setVerifyingId(id);
       const { error } = await supabase.functions.invoke('admin-verify-payment', {
-        body: { action: 'verify', verificationId: id, userId, planName, period },
+        body: { action: 'verify', verificationId: id, userId, planName, period: 'one-time' },
       });
       if (error) throw error;
       if (user.id === userId) refreshProfile();
@@ -90,7 +90,7 @@ export default function AdminPaymentsPage() {
                       User: <span className="font-mono text-xs">{p.user_id}</span>
                     </p>
                     <p className="text-sm text-white/50 font-body">
-                      Amount: ₹{p.amount} | Period: {p.period}
+                      Amount: ₹{p.amount} | One-time
                     </p>
                     <p className="text-sm text-white/50 font-body">
                       UTR: <span className="font-mono text-pink">{p.utr}</span>
@@ -107,7 +107,7 @@ export default function AdminPaymentsPage() {
                   {p.status === 'pending' && (
                     <div className="flex gap-2 shrink-0">
                       <Button variant="primary" size="sm"
-                        onClick={() => handleVerify(p.id, p.user_id, p.plan_name, p.period)}
+                        onClick={() => handleVerify(p.id, p.user_id, p.plan_name)}
                         loading={verifyingId === p.id}>Verify</Button>
                       <Button variant="ghost" size="sm"
                         className="text-red-400 border-red-400/30 hover:bg-red-400/10"

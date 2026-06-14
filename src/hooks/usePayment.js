@@ -8,7 +8,7 @@ export function usePayment() {
   const toast = useToast();
   const [loading, setLoading] = useState(false);
 
-  async function submitPayment({ planName, amount, period, utr, upiId }) {
+  async function submitPayment({ planName, amount, utr, upiId }) {
     if (!user) {
       toast.error('Please sign in first.');
       return;
@@ -21,7 +21,7 @@ export function usePayment() {
         user_id: user.id,
         plan_name: planName,
         amount,
-        period,
+        period: 'one-time',
         utr: utr.trim(),
         upi_id: upiId || null,
         status: 'pending',

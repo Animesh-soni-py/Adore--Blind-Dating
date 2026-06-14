@@ -3,24 +3,24 @@ import Accordion from '../components/ui/Accordion';
 
 const billingFaqs = [
   {
-    question: 'Can I cancel my subscription anytime?',
-    answer: 'Yes! You can cancel anytime from your dashboard. Your premium features will remain active until the end of your current billing period.',
+    question: 'Is this a one-time payment?',
+    answer: 'Yes! Pay once and unlock your plan forever. No recurring subscriptions, no hidden charges.',
   },
   {
     question: 'What payment methods do you accept?',
     answer: 'We accept UPI payments. Simply scan the QR code and pay using any UPI app like Google Pay, PhonePe, or Paytm.',
   },
   {
-    question: 'Is there a free trial for Premium?',
-    answer: 'New members get a 7-day free trial of Premium features when they complete their personality quiz and get their first match.',
+    question: 'How long does verification take?',
+    answer: 'Once you submit your payment UTR, our team verifies it within 24 hours and activates your plan.',
   },
   {
-    question: 'Can I switch between plans?',
-    answer: 'Absolutely! You can upgrade or downgrade at any time. When upgrading, you\'ll be charged the prorated difference. When downgrading, the change takes effect at the end of your current billing period.',
+    question: 'Can I upgrade from Standard to Premium?',
+    answer: 'Yes! You can upgrade anytime by paying the difference between plans.',
   },
   {
     question: 'Do you offer refunds?',
-    answer: 'We offer a full refund within the first 7 days of any paid subscription if you\'re not satisfied. After 7 days, we\'ll provide a prorated credit toward future billing.',
+    answer: 'We offer a full refund within the first 7 days of purchase if you\'re not satisfied.',
   },
 ];
 

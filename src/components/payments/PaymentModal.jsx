@@ -75,7 +75,6 @@ export default function PaymentModal({ isOpen, onClose, plan }) {
       await submitPayment({
         planName: plan.name,
         amount: plan.price,
-        period: plan.period,
         utr: utr.trim(),
         upiId: UPI_ID,
       });
@@ -94,12 +93,12 @@ export default function PaymentModal({ isOpen, onClose, plan }) {
             <div>
               <h3 className="font-display text-lg font-bold text-dark">{plan.name} Plan</h3>
               <p className="text-sm text-dark/50 font-body">
-                {plan.period === 'yearly' ? 'Annual billing' : 'Monthly billing'}
+                One-time payment
               </p>
             </div>
             <div className="text-right">
               <p className="font-display text-2xl font-extrabold text-pink">₹{plan.price}</p>
-              <p className="text-xs text-dark/40">/{plan.period === 'yearly' ? 'year' : 'month'}</p>
+              <p className="text-xs text-dark/40">one-time</p>
             </div>
           </div>
           {plan.features && (
@@ -164,7 +163,7 @@ export default function PaymentModal({ isOpen, onClose, plan }) {
           <div className="bg-pink/5 border border-pink/20 rounded-xl p-4 text-center">
             <p className="text-lg font-bold text-dark">{plan.name} Plan</p>
             <p className="text-3xl font-extrabold text-pink mt-1">₹{plan.price}</p>
-            <p className="text-xs text-dark/40">{plan.period === 'yearly' ? 'Annual billing' : 'Monthly billing'}</p>
+            <p className="text-xs text-dark/40">One-time payment</p>
           </div>
 
           <div className="space-y-2">

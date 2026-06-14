@@ -8,8 +8,7 @@ const plans = [
   {
     name: 'Standard',
     emoji: '💕',
-    monthlyPrice: 199,
-    yearlyPrice: 1982,
+    price: 199,
     popular: false,
     features: [
       'Basic personality quiz',
@@ -24,8 +23,7 @@ const plans = [
   {
     name: 'Premium',
     emoji: '💘',
-    monthlyPrice: 399,
-    yearlyPrice: 3974,
+    price: 399,
     popular: true,
     features: [
       'Priority matching queue',
@@ -42,7 +40,6 @@ const plans = [
 ];
 
 export default function PricingSection() {
-  const [yearly, setYearly] = useState(false);
   const sectionRef = useRef(null);
   const { isAuthenticated, profile, refreshProfile } = useAuth();
   const [selectedPlan, setSelectedPlan] = useState(null);
@@ -58,8 +55,7 @@ export default function PricingSection() {
       e.preventDefault();
       setSelectedPlan({
         name: plan.name,
-        price: yearly ? plan.yearlyPrice : plan.monthlyPrice,
-        period: yearly ? 'yearly' : 'monthly',
+        price: plan.price,
         features: plan.features,
       });
       setIsPaymentOpen(true);
@@ -92,7 +88,7 @@ export default function PricingSection() {
           <div className="text-center max-w-[500px] mx-auto py-12">
             <span className="text-5xl mb-4 block">👑</span>
             <h3 className="font-display text-2xl font-bold text-white mb-2 italic">You're Premium!</h3>
-            <p className="text-white/50 font-body">You already have an active premium subscription.</p>
+            <p className="text-white/50 font-body">You already have an active premium plan.</p>
           </div>
         ) : (
           <>
@@ -104,26 +100,8 @@ export default function PricingSection() {
                 Find Your <span className="text-pink">Perfect Plan</span>
               </h2>
               <p className="font-body text-body text-white/50 max-w-[500px] mx-auto mb-8">
-                Choose the plan that works best for you. Upgrade anytime.
+                One-time payment. No recurring charges. Pay once and unlock your plan forever.
               </p>
-              <div className="flex items-center justify-center gap-4">
-                <span className={`font-body text-sm font-medium transition-colors ${!yearly ? 'text-white' : 'text-white/40'}`}>
-                  Monthly
-                </span>
-                <button
-                  className={`pricing-toggle ${yearly ? 'active' : ''}`}
-                  onClick={() => setYearly(!yearly)}
-                  aria-label={`Switch to ${yearly ? 'monthly' : 'yearly'} billing`}
-                />
-                <span className={`font-body text-sm font-medium transition-colors ${yearly ? 'text-white' : 'text-white/40'}`}>
-                  Yearly
-                </span>
-                {yearly && (
-                  <span className="text-xs font-bold text-lime bg-lime/20 px-2 py-1 rounded-full">
-                    Save up to 17%
-                  </span>
-                )}
-              </div>
             </div>
             <div
               ref={sectionRef}
@@ -148,19 +126,12 @@ export default function PricingSection() {
                   <h3 className="font-display text-xl font-bold text-white mb-2 italic">{plan.name}</h3>
                   <div className="flex items-baseline justify-center gap-1">
                     <span className="font-display text-4xl font-extrabold text-white">
-                      {formatPrice(yearly ? plan.yearlyPrice : plan.monthlyPrice)}
+                      {formatPrice(plan.price)}
                     </span>
-                    {plan.monthlyPrice > 0 && (
-                      <span className="text-sm text-white/40 font-body">
-                        /{yearly ? 'year' : 'month'}
-                      </span>
-                    )}
+                    <span className="text-sm text-white/40 font-body">
+                      one-time
+                    </span>
                   </div>
-                  {yearly && plan.monthlyPrice > 0 && (
-                    <p className="text-xs text-white/35 mt-1">
-                      ₹{Math.round(plan.yearlyPrice / 12)}/mo billed annually
-                    </p>
-                  )}
                 </div>
 
                 <ul className="space-y-3 mb-8 flex-1">
