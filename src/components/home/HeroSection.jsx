@@ -42,16 +42,11 @@ export default function HeroSection() {
     <section
       ref={sectionRef}
       className="relative min-h-[90vh] flex items-center overflow-hidden"
-      style={{
-        background: 'linear-gradient(135deg, #1A1A2E 0%, #2D1B69 60%, #3D1A78 100%)',
-        backgroundSize: '200% 200%',
-        animation: 'gradient-shift 12s ease infinite',
-      }}
       aria-label="Hero section"
     >
       {/* Ambient glow blobs */}
-      <div className="absolute top-[-100px] right-[-100px] w-[500px] h-[500px] rounded-full pointer-events-none" style={{ background: 'radial-gradient(circle, rgba(200,168,240,0.15) 0%, transparent 70%)' }} />
-      <div className="absolute bottom-[-50px] left-[-50px] w-[400px] h-[400px] rounded-full pointer-events-none" style={{ background: 'radial-gradient(circle, rgba(255,94,138,0.1) 0%, transparent 70%)' }} />
+      <div className="absolute top-[-100px] right-[-100px] w-[500px] h-[500px] rounded-full pointer-events-none" style={{ background: 'radial-gradient(circle, rgba(200,168,240,0.2) 0%, transparent 70%)' }} />
+      <div className="absolute bottom-[-50px] left-[-50px] w-[400px] h-[400px] rounded-full pointer-events-none" style={{ background: 'radial-gradient(circle, rgba(255,94,138,0.15) 0%, transparent 70%)' }} />
 
       {/* Floating hearts */}
       {floatingHearts.map((heart, i) => (

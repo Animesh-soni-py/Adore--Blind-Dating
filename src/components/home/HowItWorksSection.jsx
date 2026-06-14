@@ -48,7 +48,6 @@ export default function HowItWorksSection() {
     <section
       id="how-it-works"
       className="py-20 lg:py-5xl scroll-mt-20"
-      style={{ background: 'linear-gradient(135deg, #1A1A2E 0%, #2D1B69 50%, #1A1A2E 100%)' }}
       aria-label="How It Works"
     >
       <div className="container-adore">

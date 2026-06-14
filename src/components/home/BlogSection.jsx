@@ -44,7 +44,7 @@ export default function BlogSection() {
   }, []);
 
   return (
-    <section className="py-20 lg:py-5xl" style={{ background: 'linear-gradient(180deg, #1A1A2E 0%, #0F0A1E 100%)' }} aria-label="Blog and love stories">
+    <section className="py-20 lg:py-5xl" aria-label="Blog and love stories">
       <div className="container-adore">
         <div className="text-center mb-14">
           <p className="font-display text-caption font-bold tracking-[3px] uppercase text-pink mb-4 italic">

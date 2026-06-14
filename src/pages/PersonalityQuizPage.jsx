@@ -245,11 +245,12 @@ function QuizInner() {
   const allVisible = visibleCount >= totalQuestions;
   const answeredCount = questions.filter((q) => {
     const a = answers[q.key];
-    if (!a) return false;
+    if (a === null || a === undefined) return false;
     if (q.type === 'multiselect') return Array.isArray(a) && a.length > 0;
     return true;
   }).length;
-  const progress = (answeredCount / totalQuestions) * 100;
+  const skippedCount = questions.filter((q) => answers[q.key] === null).length;
+  const progress = ((answeredCount + skippedCount) / totalQuestions) * 100;
 
   const getAnswer = useCallback((key) => answers[key] ?? null, [answers]);
 
@@ -270,12 +271,16 @@ function QuizInner() {
     }
   }
 
+  function handleSkip(key) {
+    setAnswer(key, null);
+  }
+
   function handleShowMore() {
     setVisibleCount((prev) => Math.min(prev + QUESTIONS_PER_PAGE, totalQuestions));
   }
 
   function allRequiredAnswered() {
-    return answeredCount === totalQuestions;
+    return skippedCount + answeredCount === totalQuestions;
   }
 
   async function handleSubmit() {
@@ -417,6 +422,17 @@ function QuizInner() {
                     </div>
                   </div>
                 )}
+
+                {/* Skip Button */}
+                <div className="mt-4 text-center">
+                  <button
+                    type="button"
+                    onClick={() => handleSkip(q.key)}
+                    className="text-xs text-white/30 hover:text-white/50 transition-colors underline underline-offset-2"
+                  >
+                    {getAnswer(q.key) === null ? 'Skipped' : 'Skip this question'}
+                  </button>
+                </div>
               </div>
             ))}
           </div>
@@ -441,7 +457,7 @@ function QuizInner() {
                 disabled={!allRequiredAnswered() || submitting || profileLoading}
                 loading={submitting}
               >
-                {allRequiredAnswered() ? 'Complete Quiz' : `Answer all questions (${totalQuestions - answeredCount} remaining)`}
+                {allRequiredAnswered() ? 'Complete Quiz' : `${totalQuestions - answeredCount - skippedCount} unanswered, ${skippedCount} skipped`}
               </Button>
             )}
           </div>
