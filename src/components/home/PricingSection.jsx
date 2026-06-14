@@ -9,7 +9,7 @@ const plans = [
     name: 'Standard',
     emoji: '💕',
     monthlyPrice: 199,
-    yearlyPrice: 1999,
+    yearlyPrice: 1982,
     popular: false,
     features: [
       'Basic personality quiz',
@@ -25,7 +25,7 @@ const plans = [
     name: 'Premium',
     emoji: '💘',
     monthlyPrice: 399,
-    yearlyPrice: 3999,
+    yearlyPrice: 3974,
     popular: true,
     features: [
       'Priority matching queue',

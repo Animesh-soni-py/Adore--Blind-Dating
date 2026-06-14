@@ -46,10 +46,12 @@ export default function BlogPostPage() {
           </div>
         </div>
 
-        <div className="h-[200px] rounded-xl bg-gradient-to-br from-mint/30 via-yellow/20 to-blush/30 mb-10 flex items-center justify-center">
-          <span className="font-display text-6xl opacity-30">
-            {post.category === 'Love Stories' ? '💕' : post.category === 'Dating Tips' ? '💡' : '🔬'}
-          </span>
+        <div className="h-[320px] rounded-xl overflow-hidden mb-10 relative">
+          <img 
+            src={post.imageUrl} 
+            alt={post.title}
+            className="w-full h-full object-cover"
+          />
         </div>
 
         <div className="prose prose-invert prose-lg max-w-none text-white/70 leading-relaxed whitespace-pre-line font-body">

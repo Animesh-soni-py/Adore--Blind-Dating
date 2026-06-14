@@ -4,7 +4,7 @@ const stats = [
   { value: 12847, suffix: '', label: 'Matches Made' },
   { value: 94, suffix: '%', label: 'Satisfaction Rate' },
   { value: 7, suffix: ' Days', label: 'Avg. First Reveal' },
-  { value: 50, suffix: '+', label: 'Cities Active' },
+  { value: 'Jabalpur', suffix: '', label: 'Only Active In' },
 ];
 
 function CountUp({ target, suffix, duration = 2000 }) {
@@ -68,8 +68,12 @@ export default function StatsSection() {
               <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
                 <div className="w-20 h-20 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-500" style={{ background: 'radial-gradient(circle, rgba(255,94,138,0.15) 0%, transparent 70%)' }} />
               </div>
-              <p className="font-display text-4xl lg:text-5xl font-extrabold text-pink mb-2 relative z-10 transition-transform duration-300 group-hover:scale-105">
-                <CountUp target={stat.value} suffix={stat.suffix} />
+              <p className={`font-display font-extrabold text-pink mb-2 relative z-10 transition-transform duration-300 group-hover:scale-105 ${typeof stat.value === 'number' ? 'text-4xl lg:text-5xl' : 'text-3xl lg:text-4xl'}`}>
+                {typeof stat.value === 'number' ? (
+                  <CountUp target={stat.value} suffix={stat.suffix} />
+                ) : (
+                  `${stat.value}${stat.suffix}`
+                )}
               </p>
               <p className="font-display text-xs font-semibold tracking-[2px] uppercase text-white/50 relative z-10">
                 {stat.label}

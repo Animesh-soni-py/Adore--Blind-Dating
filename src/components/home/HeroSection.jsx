@@ -9,7 +9,7 @@ import FloatingDecorators from '../illustrations/FloatingDecorators';
 const stats = [
   { value: '12,000+', label: 'Matches Made' },
   { value: '94%', label: 'Satisfaction' },
-  { value: '50+', label: 'Cities' },
+  { value: 'Only in', label: 'Jabalpur' },
 ];
 
 const floatingHearts = [
@@ -90,7 +90,7 @@ export default function HeroSection() {
               transition={{ duration: 0.7, delay: 0.3 }}
             >
               Fall in Love with Their{' '}
-              <span className="text-gradient-pink" style={{ WebkitTextFillColor: 'transparent', background: 'linear-gradient(135deg, #FF5E8A, #C8A8F0)', WebkitBackgroundClip: 'text', backgroundClip: 'text' }}>
+              <span className="text-gradient-pink pr-[0.15em]" style={{ WebkitTextFillColor: 'transparent', background: 'linear-gradient(135deg, #FF5E8A, #C8A8F0)', WebkitBackgroundClip: 'text', backgroundClip: 'text' }}>
                 Soul
               </span>{' '}
               First

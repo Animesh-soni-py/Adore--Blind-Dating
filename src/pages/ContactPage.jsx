@@ -12,18 +12,22 @@ const contactInfo = [
       </svg>
     ),
     title: 'Email Us',
-    detail: 'hello@adoredating.com',
+    detail: 'adorebilnddating@gmail.com',
     subtitle: 'We reply within 24 hours',
+    href: 'mailto:adorebilnddating@gmail.com',
   },
   {
     icon: (
       <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-        <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 6.75c0 8.284 6.716 15 15 15h2.25a2.25 2.25 0 002.25-2.25v-1.372c0-.516-.351-.966-.852-1.091l-4.423-1.106c-.44-.11-.902.055-1.173.417l-.97 1.293c-.282.376-.769.542-1.21.38a12.035 12.035 0 01-7.143-7.143c-.162-.441.004-.928.38-1.21l1.293-.97c.363-.271.527-.734.417-1.173L6.963 3.102a1.125 1.125 0 00-1.091-.852H4.5A2.25 2.25 0 002.25 4.5v2.25z" />
+        <rect x="2" y="2" width="20" height="20" rx="5" />
+        <circle cx="12" cy="12" r="5" />
+        <circle cx="17.5" cy="6.5" r="1.5" fill="currentColor" stroke="none" />
       </svg>
     ),
-    title: 'Call Us',
-    detail: '+91 98765 43210',
-    subtitle: 'Mon-Sat, 10am - 7pm IST',
+    title: 'Instagram',
+    detail: 'adore_blind_dating_jbp',
+    subtitle: 'Send us a DM anytime!',
+    href: 'https://instagram.com/adore_blind_dating_jbp',
   },
   {
     icon: (
@@ -39,7 +43,7 @@ const contactInfo = [
 ];
 
 const socialLinks = [
-  { label: 'Instagram', href: '#', icon: '📸' },
+  { label: 'Instagram', href: 'https://instagram.com/adore_blind_dating_jbp', icon: '📸' },
   { label: 'Twitter', href: '#', icon: '🐦' },
   { label: 'LinkedIn', href: '#', icon: '💼' },
 ];
@@ -142,7 +146,18 @@ export default function ContactPage() {
                       </div>
                       <div>
                         <h3 className="font-display text-sm font-bold text-white mb-1">{info.title}</h3>
-                        <p className="text-base font-body text-white/80 font-medium">{info.detail}</p>
+                        {info.href ? (
+                          <a 
+                            href={info.href}
+                            target={info.href.startsWith('http') ? '_blank' : undefined}
+                            rel="noopener noreferrer"
+                            className="text-base font-body text-white/80 font-medium hover:text-pink transition-colors block"
+                          >
+                            {info.detail}
+                          </a>
+                        ) : (
+                          <p className="text-base font-body text-white/80 font-medium">{info.detail}</p>
+                        )}
                         <p className="text-xs text-white/40 mt-0.5">{info.subtitle}</p>
                       </div>
                     </motion.div>

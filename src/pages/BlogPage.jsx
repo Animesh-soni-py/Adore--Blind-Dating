@@ -9,10 +9,12 @@ function BlogCard({ post }) {
       to={`/blog/${post.slug}`}
       className="bg-white/5 rounded-2xl border border-white/10 overflow-hidden transition-all duration-300 hover:-translate-y-1 hover:shadow-card-elevated block p-6"
     >
-      <div className="h-[160px] rounded-lg bg-gradient-to-br from-mint/30 via-yellow/20 to-blush/30 mb-5 flex items-center justify-center">
-        <span className="font-display text-4xl opacity-30">
-          {post.category === 'Love Stories' ? '💕' : post.category === 'Dating Tips' ? '💡' : '🔬'}
-        </span>
+      <div className="h-[160px] rounded-lg overflow-hidden mb-5 relative">
+        <img 
+          src={post.imageUrl} 
+          alt={post.title}
+          className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+        />
       </div>
       <Badge variant="pink" className="mb-3">{post.category}</Badge>
       <h2 className="font-display text-lg font-bold text-white mb-2 hover:text-pink transition-colors">

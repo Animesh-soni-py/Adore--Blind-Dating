@@ -28,7 +28,7 @@ const faqs = [
   },
   {
     question: 'Is ADORE available in my city?',
-    answer: 'We\'re currently active in 50+ cities across India, with more being added based on demand. Your matches are prioritized by your location preferences.',
+    answer: 'We\'re currently active exclusively in Jabalpur. We plan to expand to other cities soon, but for now, we are focused on creating the best blind dating experience right here in Jabalpur.',
   },
   {
     question: 'How is my data protected?',
