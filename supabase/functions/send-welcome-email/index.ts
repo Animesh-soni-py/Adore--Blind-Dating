@@ -1,24 +1,19 @@
-import { serve } from 'https://deno.land/std@0.177.0/http/server.ts';
+import { serve } from 'https://deno.land/std@0.177.0/http/server.ts'
 
-const RESEND_API_KEY = Deno.env.get('RESEND_API_KEY')!;
+const RESEND_API_KEY = Deno.env.get('RESEND_API_KEY')
 
-interface WelcomePayload {
-  email: string;
-  firstName: string;
-}
-
-serve(async (req: Request) => {
+serve(async (req) => {
   try {
-    const { email, firstName }: WelcomePayload = await req.json();
+    const { email, firstName } = await req.json()
 
     if (!email) {
       return new Response(JSON.stringify({ error: 'Email is required' }), {
         status: 400,
         headers: { 'Content-Type': 'application/json' },
-      });
+      })
     }
 
-    const displayName = firstName || 'there';
+    const displayName = firstName || 'there'
 
     const htmlContent = `
       <!DOCTYPE html>
@@ -77,7 +72,7 @@ serve(async (req: Request) => {
         </div>
       </body>
       </html>
-    `;
+    `
 
     const res = await fetch('https://api.resend.com/emails', {
       method: 'POST',
@@ -91,25 +86,25 @@ serve(async (req: Request) => {
         subject: `Welcome to ADORE, ${displayName}! 💘`,
         html: htmlContent,
       }),
-    });
+    })
 
-    const data = await res.json();
+    const data = await res.json()
 
     if (!res.ok) {
       return new Response(JSON.stringify({ error: data }), {
         status: res.status,
         headers: { 'Content-Type': 'application/json' },
-      });
+      })
     }
 
     return new Response(JSON.stringify({ success: true, id: data.id }), {
       status: 200,
       headers: { 'Content-Type': 'application/json' },
-    });
+    })
   } catch (error) {
-    return new Response(JSON.stringify({ error: (error as Error).message }), {
+    return new Response(JSON.stringify({ error: error.message }), {
       status: 500,
       headers: { 'Content-Type': 'application/json' },
-    });
+    })
   }
-});
+})

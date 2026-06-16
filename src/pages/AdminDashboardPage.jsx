@@ -7,16 +7,20 @@ export default function AdminDashboardPage() {
   const { profile, isAuthenticated } = useAuth();
   const [users, setUsers] = useState([]);
   const [payments, setPayments] = useState([]);
+  const [matches, setMatches] = useState([]);
   const [selectedUser, setSelectedUser] = useState(null);
   const [quizAnswers, setQuizAnswers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [verifyingId, setVerifyingId] = useState(null);
+  const [matching, setMatching] = useState(false);
+  const [matchResult, setMatchResult] = useState(null);
   const [tab, setTab] = useState('users');
 
   useEffect(() => {
     if (isAuthenticated) {
       fetchUsers();
       fetchPayments();
+      fetchMatches();
     }
   }, [isAuthenticated]);
 
@@ -43,6 +47,18 @@ export default function AdminDashboardPage() {
       if (!error) setPayments(data || []);
     } catch (err) {
       console.error('Failed to fetch payments:', err);
+    }
+  }
+
+  async function fetchMatches() {
+    try {
+      const { data, error } = await supabase
+        .from('matches')
+        .select('*')
+        .order('created_at', { ascending: false });
+      if (!error) setMatches(data || []);
+    } catch (err) {
+      console.error('Failed to fetch matches:', err);
     }
   }
 
@@ -92,7 +108,23 @@ export default function AdminDashboardPage() {
     }
   }
 
+  async function handleBatchMatch() {
+    setMatching(true);
+    setMatchResult(null);
+    try {
+      const { data, error } = await supabase.functions.invoke('admin-run-matching');
+      if (error) throw error;
+      setMatchResult(data);
+      fetchMatches();
+    } catch (err) {
+      alert('Matching failed: ' + (err.message || 'Unknown error'));
+    } finally {
+      setMatching(false);
+    }
+  }
+
   const pendingPayments = payments.filter((p) => p.status === 'pending');
+  const activeMatches = matches.filter((m) => ['active', 'pending'].includes(m.status));
 
   if (!isAuthenticated || !profile?.is_admin) {
     return (
@@ -134,6 +166,7 @@ export default function AdminDashboardPage() {
         <div className="flex gap-4 mb-6 border-b border-white/10">
           <button onClick={() => { setTab('users'); setSelectedUser(null); }} className={`pb-3 text-sm font-medium transition-colors ${tab === 'users' ? 'text-pink border-b-2 border-pink' : 'text-white/50 hover:text-white'}`}>Users</button>
           <button onClick={() => { setTab('payments'); setSelectedUser(null); }} className={`pb-3 text-sm font-medium transition-colors ${tab === 'payments' ? 'text-pink border-b-2 border-pink' : 'text-white/50 hover:text-white'}`}>Payments {pendingPayments.length > 0 && <span className="ml-1.5 px-1.5 py-0.5 text-[10px] bg-pink text-white rounded-full">{pendingPayments.length}</span>}</button>
+          <button onClick={() => { setTab('matching'); setSelectedUser(null); }} className={`pb-3 text-sm font-medium transition-colors ${tab === 'matching' ? 'text-pink border-b-2 border-pink' : 'text-white/50 hover:text-white'}`}>Matching <span className="ml-1.5 px-1.5 py-0.5 text-[10px] bg-white/10 text-white/60 rounded-full">{activeMatches.length}</span></button>
         </div>
 
         {/* User Detail View */}
@@ -212,7 +245,7 @@ export default function AdminDashboardPage() {
               ))
             )}
           </div>
-        ) : (
+        ) : tab === 'payments' ? (
           /* Payments Tab */
           <div className="space-y-4">
             {payments.length === 0 ? (
@@ -241,6 +274,50 @@ export default function AdminDashboardPage() {
                 );
               })
             )}
+          </div>
+        ) : (
+          /* Matching Tab */
+          <div>
+            <div className="flex items-center justify-between mb-6">
+              <div>
+                <h2 className="text-xl font-bold text-white">Match Users</h2>
+                <p className="text-sm text-white/40 mt-1">{activeMatches.length} active matches · {users.filter((u) => u.onboarding_completed).length} eligible users</p>
+              </div>
+              <Button variant="primary" size="md" onClick={handleBatchMatch} loading={matching}>Run Batch Matching</Button>
+            </div>
+
+            {matchResult && (
+              <div className="bg-lime/10 border border-lime/30 rounded-xl p-4 mb-6">
+                <p className="text-lime font-semibold">Created {matchResult.count} new matches!</p>
+              </div>
+            )}
+
+            <div className="space-y-3">
+              {matches.length === 0 ? (
+                <p className="text-white/40">No matches yet. Click "Run Batch Matching" to create matches.</p>
+              ) : (
+                matches.map((m) => {
+                  const userA = users.find((u) => u.id === m.user_a_id);
+                  const userB = users.find((u) => u.id === m.user_b_id);
+                  return (
+                    <div key={m.id} className="bg-white/5 border border-white/10 rounded-xl p-4">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                          <span className="text-sm text-white font-medium">{userA?.first_name || m.user_a_id.slice(0, 8)}</span>
+                          <span className="text-pink">&lt;3</span>
+                          <span className="text-sm text-white font-medium">{userB?.first_name || m.user_b_id.slice(0, 8)}</span>
+                          <span className="ml-2 text-xs font-bold text-pink bg-pink/10 px-2 py-0.5 rounded-full">{m.compatibility_score}%</span>
+                        </div>
+                        <div className="flex items-center gap-3">
+                          <span className={`text-xs px-2 py-0.5 rounded-full ${m.status === 'active' ? 'text-lime bg-lime/10' : m.status === 'revealed' ? 'text-pink bg-pink/10' : 'text-white/40 bg-white/10'}`}>{m.status}</span>
+                          <span className="text-xs text-white/30">{new Date(m.matched_at).toLocaleDateString()}</span>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })
+              )}
+            </div>
           </div>
         )}
       </div>

@@ -12,7 +12,7 @@ const BLOCKED_WORDS = [
   'bollocks', 'arse', 'bloody', 'wanker', 'prick', 'twat', 'douche',
 ]
 
-function containsProfanity(text: string): boolean {
+function containsProfanity(text) {
   if (!text) return false
   const lower = text.toLowerCase()
   return BLOCKED_WORDS.some((word) =>
@@ -28,7 +28,7 @@ serve(async (req) => {
   try {
     const { text, fields } = await req.json()
 
-    const results: Record<string, boolean> = {}
+    const results = {}
 
     if (text) {
       results._global = containsProfanity(text)
@@ -36,7 +36,7 @@ serve(async (req) => {
 
     if (fields) {
       for (const [key, value] of Object.entries(fields)) {
-        results[key] = containsProfanity(value as string)
+        results[key] = containsProfanity(value)
       }
     }
 

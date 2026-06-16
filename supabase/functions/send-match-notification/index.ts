@@ -1,36 +1,27 @@
-import { serve } from 'https://deno.land/std@0.177.0/http/server.ts';
+import { serve } from 'https://deno.land/std@0.177.0/http/server.ts'
 
-const RESEND_API_KEY = Deno.env.get('RESEND_API_KEY')!;
+const RESEND_API_KEY = Deno.env.get('RESEND_API_KEY')
 
-interface MatchNotificationPayload {
-  type: 'new_match' | 'match_expiring';
-  recipientEmail: string;
-  recipientName: string;
-  matchName: string;
-  compatibilityScore: number;
-  expiresAt?: string;
-}
-
-serve(async (req: Request) => {
+serve(async (req) => {
   try {
-    const payload: MatchNotificationPayload = await req.json();
-    const { type, recipientEmail, recipientName, matchName, compatibilityScore, expiresAt } = payload;
+    const payload = await req.json()
+    const { type, recipientEmail, recipientName, matchName, compatibilityScore, expiresAt } = payload
 
     if (!recipientEmail || !type) {
       return new Response(JSON.stringify({ error: 'recipientEmail and type are required' }), {
         status: 400,
         headers: { 'Content-Type': 'application/json' },
-      });
+      })
     }
 
-    const displayName = recipientName || 'there';
-    const displayMatch = matchName || 'someone special';
+    const displayName = recipientName || 'there'
+    const displayMatch = matchName || 'someone special'
 
-    let subject: string;
-    let bodyContent: string;
+    let subject
+    let bodyContent
 
     if (type === 'new_match') {
-      subject = `You have a new match on ADORE! 💕`;
+      subject = `You have a new match on ADORE! 💕`
       bodyContent = `
         <div class="hero-text">New Match Alert! <span>💕</span></div>
         <p class="body-text">
@@ -43,10 +34,10 @@ serve(async (req: Request) => {
         <div class="cta-wrapper">
           <a href="https://adore.dating/matches" class="cta-btn">Start Chatting →</a>
         </div>
-      `;
+      `
     } else {
-      const expDate = expiresAt ? new Date(expiresAt).toLocaleDateString('en-US', { month: 'long', day: 'numeric' }) : 'soon';
-      subject = `Your match with ${displayMatch} expires ${expDate} ⏰`;
+      const expDate = expiresAt ? new Date(expiresAt).toLocaleDateString('en-US', { month: 'long', day: 'numeric' }) : 'soon'
+      subject = `Your match with ${displayMatch} expires ${expDate} ⏰`
       bodyContent = `
         <div class="hero-text">Don't Let This <span>Connection</span> Expire! ⏰</div>
         <p class="body-text">
@@ -58,7 +49,7 @@ serve(async (req: Request) => {
         <div class="cta-wrapper">
           <a href="https://adore.dating/matches" class="cta-btn">Continue Chatting →</a>
         </div>
-      `;
+      `
     }
 
     const htmlContent = `
@@ -97,7 +88,7 @@ serve(async (req: Request) => {
         </div>
       </body>
       </html>
-    `;
+    `
 
     const res = await fetch('https://api.resend.com/emails', {
       method: 'POST',
@@ -111,25 +102,25 @@ serve(async (req: Request) => {
         subject,
         html: htmlContent,
       }),
-    });
+    })
 
-    const data = await res.json();
+    const data = await res.json()
 
     if (!res.ok) {
       return new Response(JSON.stringify({ error: data }), {
         status: res.status,
         headers: { 'Content-Type': 'application/json' },
-      });
+      })
     }
 
     return new Response(JSON.stringify({ success: true, id: data.id }), {
       status: 200,
       headers: { 'Content-Type': 'application/json' },
-    });
+    })
   } catch (error) {
-    return new Response(JSON.stringify({ error: (error as Error).message }), {
+    return new Response(JSON.stringify({ error: error.message }), {
       status: 500,
       headers: { 'Content-Type': 'application/json' },
-    });
+    })
   }
-});
+})
