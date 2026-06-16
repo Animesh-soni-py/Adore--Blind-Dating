@@ -373,6 +373,8 @@ function SetupInner() {
         city: answers.locality || null,
         bio: answers.threeWords || null,
         interests: answers.interests || [],
+        phone: answers.whatsapp || null,
+        instagram: answers.instagram || null,
       };
 
       // Store extended onboarding data as JSON

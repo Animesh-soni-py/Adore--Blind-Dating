@@ -20,6 +20,7 @@ const ContactPage = lazy(() => import('./pages/ContactPage'))
 const HowItWorksPage = lazy(() => import('./pages/HowItWorksPage'))
 const CitySelectionPage = lazy(() => import('./pages/CitySelectionPage'))
 const AdminPaymentsPage = lazy(() => import('./pages/AdminPaymentsPage'))
+const AdminDashboardPage = lazy(() => import('./pages/AdminDashboardPage'))
 const ResetPasswordPage = lazy(() => import('./pages/ResetPasswordPage'))
 const NotFoundPage = lazy(() => import('./pages/NotFoundPage'))
 
@@ -56,6 +57,7 @@ export default function App() {
           <Route path="/how-it-works" element={<HowItWorksPage />} />
           <Route path="/city-selection" element={<CitySelectionPage />} />
           <Route path="/admin/payments" element={<AdminRoute><AdminPaymentsPage /></AdminRoute>} />
+          <Route path="/admin" element={<AdminRoute><AdminDashboardPage /></AdminRoute>} />
           <Route path="*" element={<NotFoundPage />} />
         </Route>
       </Routes>
