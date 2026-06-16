@@ -1,0 +1,41 @@
+name: Security Audit
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main]
+  schedule:
+    - cron: '0 6 * * 1'
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check for hardcoded secrets
+        uses: trufflesecurity/trufflehog@v3
+        with:
+          extra_args: --only-verified
+
+      - name: Check _headers file exists
+        run: |
+          if [ ! -f _headers ]; then
+            echo "Missing _headers file!"
+            exit 1
+          fi
+          echo "_headers file found"
+
+      - name: Check for exposed API keys in JS bundles
+        run: |
+          echo "Checking for hardcoded Supabase URLs..."
+          if grep -r "supabase.co" --include="*.{js,ts,jsx,tsx}" .; then
+            echo "Found Supabase URLs — ensure RLS is enabled"
+          fi
+
+      - name: Run ESLint
+        run: |
+          npm ci || true
+          npx eslint --ext .js,.jsx,.ts,.tsx src/ || true

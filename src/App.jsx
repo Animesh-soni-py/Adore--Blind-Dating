@@ -2,6 +2,7 @@ import { lazy, Suspense } from 'react'
 import { Routes, Route } from 'react-router-dom'
 import Layout from './components/layout/Layout'
 import Spinner from './components/ui/Spinner'
+import AdminRoute from './components/auth/AdminRoute'
 
 const HomePage = lazy(() => import('./pages/HomePage'))
 const LoginPage = lazy(() => import('./pages/LoginPage'))
@@ -54,7 +55,7 @@ export default function App() {
           <Route path="/contact" element={<ContactPage />} />
           <Route path="/how-it-works" element={<HowItWorksPage />} />
           <Route path="/city-selection" element={<CitySelectionPage />} />
-          <Route path="/admin/payments" element={<AdminPaymentsPage />} />
+          <Route path="/admin/payments" element={<AdminRoute><AdminPaymentsPage /></AdminRoute>} />
           <Route path="*" element={<NotFoundPage />} />
         </Route>
       </Routes>
