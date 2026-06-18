@@ -5,7 +5,7 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 }
 
-function calculateScore(a, b) {
+function calculateScore(a: any, b: any) {
   let score = 50
 
   const aInterests = Array.isArray(a.interests) ? a.interests : []

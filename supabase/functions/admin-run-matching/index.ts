@@ -9,7 +9,7 @@ const SUPABASE_URL = Deno.env.get('SUPABASE_URL') || ''
 const SUPABASE_ANON_KEY = Deno.env.get('SUPABASE_ANON_KEY') || ''
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') || ''
 
-async function supabaseQuery(path, options = {}) {
+async function supabaseQuery(path: string, options: any = {}) {
   const url = `${SUPABASE_URL}/rest/v1/${path}`
   const key = options.useServiceRole ? SUPABASE_SERVICE_ROLE_KEY : SUPABASE_ANON_KEY
   const token = options.useServiceRole ? SUPABASE_SERVICE_ROLE_KEY : (options.token || SUPABASE_ANON_KEY)
@@ -27,7 +27,7 @@ async function supabaseQuery(path, options = {}) {
   return { data, error: res.ok ? null : data, status: res.status }
 }
 
-function calculateScore(a, b) {
+function calculateScore(a: any, b: any) {
   let score = 50
   const aInterests = Array.isArray(a.interests) ? a.interests : []
   const bInterests = Array.isArray(b.interests) ? b.interests : []
