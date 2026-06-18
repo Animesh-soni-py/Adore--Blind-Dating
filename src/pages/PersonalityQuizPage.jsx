@@ -1,6 +1,6 @@
-import { useState, useCallback, useRef, useEffect } from 'react';
+import { useState, useCallback, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import { useProfile } from '../hooks/useProfile';
 import ProtectedRoute from '../components/layout/ProtectedRoute';
 import Button from '../components/ui/Button';
@@ -573,7 +573,7 @@ function QuizInner() {
                   size="md"
                   onClick={handleShowMore}
                 >
-                  Show More Questions ↓
+                  Load More Questions ↓
                 </Button>
               </motion.div>
             )}
