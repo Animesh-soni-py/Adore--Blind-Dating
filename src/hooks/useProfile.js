@@ -8,7 +8,7 @@ export function useProfile() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  const fetchProfile = useCallback(async () => {
+  const fetchProfile = useCallback(async (silent = false) => {
     await Promise.resolve();
     if (!user?.id) {
       setLoading(false);
@@ -16,7 +16,9 @@ export function useProfile() {
     }
 
     try {
-      setLoading(true);
+      if (!silent) {
+        setLoading(true);
+      }
       const { data, error: fetchError } = await supabase
         .from('profiles')
         .select('*')
@@ -34,7 +36,9 @@ export function useProfile() {
     } catch (err) {
       setError(err.message);
     } finally {
-      setLoading(false);
+      if (!silent) {
+        setLoading(false);
+      }
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user]);
@@ -45,7 +49,7 @@ export function useProfile() {
     });
 
     function handleFocus() {
-      fetchProfile();
+      fetchProfile(true);
     }
     window.addEventListener('focus', handleFocus);
     return () => window.removeEventListener('focus', handleFocus);

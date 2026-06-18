@@ -3,15 +3,15 @@ import { supabase } from '../../lib/supabase';
 import { useAuth } from '../../hooks/useAuth';
 import { useToast } from '../../hooks/useToast';
 
-function sanitizeAndResizeImage(file, maxDimension = 1200) {
+function sanitizeAndResizeImage(file, addLog, maxDimension = 1200) {
   return new Promise((resolve, reject) => {
-    console.log('[ImageSanitizer] Starting sanitization for:', file.name, 'type:', file.type, 'size:', file.size);
+    addLog(`Starting sanitization for: ${file.name} (type: ${file.type}, size: ${file.size})`);
     const reader = new FileReader();
     reader.onload = (event) => {
-      console.log('[ImageSanitizer] FileReader loaded image data');
+      addLog('FileReader loaded image data');
       const img = new Image();
       img.onload = () => {
-        console.log('[ImageSanitizer] Image loaded, dimensions:', img.width, 'x', img.height);
+        addLog(`Image loaded, dimensions: ${img.width}x${img.height}`);
         const canvas = document.createElement('canvas');
         let width = img.width;
         let height = img.height;
@@ -25,7 +25,7 @@ function sanitizeAndResizeImage(file, maxDimension = 1200) {
             width = Math.round((width * maxDimension) / height);
             height = maxDimension;
           }
-          console.log('[ImageSanitizer] Rescaled to:', width, 'x', height);
+          addLog(`Rescaling image to: ${width}x${height}`);
         }
 
         canvas.width = width;
@@ -38,13 +38,13 @@ function sanitizeAndResizeImage(file, maxDimension = 1200) {
 
         // Drawing the image onto canvas strips EXIF metadata (e.g., GPS location tags)
         ctx.drawImage(img, 0, 0, width, height);
-        console.log('[ImageSanitizer] Image drawn to canvas. Converting to JPEG blob...');
+        addLog('Image drawn to canvas. Converting to JPEG blob...');
 
         // Convert to a clean JPEG blob
         canvas.toBlob(
           (blob) => {
             if (blob) {
-              console.log('[ImageSanitizer] Blob generated, size:', blob.size, 'type:', blob.type);
+              addLog(`Blob generated, size: ${blob.size} bytes, type: ${blob.type}`);
               resolve(blob);
             } else {
               reject(new Error('Failed to generate image blob'));
@@ -54,14 +54,14 @@ function sanitizeAndResizeImage(file, maxDimension = 1200) {
           0.85
         );
       };
-      img.onerror = (err) => {
-        console.error('[ImageSanitizer] Image loading failed:', err);
+      img.onerror = () => {
+        addLog('Image loading failed', 'error');
         reject(new Error('Failed to process image file'));
       };
       img.src = event.target.result;
     };
-    reader.onerror = (err) => {
-      console.error('[ImageSanitizer] FileReader failed:', err);
+    reader.onerror = () => {
+      addLog('FileReader failed', 'error');
       reject(new Error('Failed to read image file'));
     };
     reader.readAsDataURL(file);
@@ -75,6 +75,37 @@ export default function PhotoUpload({ currentUrl, onUpload }) {
   const [prevUrl, setPrevUrl] = useState(currentUrl);
   const [uploading, setUploading] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
+  const [logs, setLogs] = useState(() => {
+    try {
+      const saved = sessionStorage.getItem('photo_upload_logs');
+      return saved ? JSON.parse(saved) : [];
+    } catch {
+      return [];
+    }
+  });
+
+  function addLog(msg, type = 'info') {
+    const formatted = `[${new Date().toLocaleTimeString()}] [${type.toUpperCase()}] ${msg}`;
+    console.log(formatted);
+    setLogs((prev) => {
+      const updated = [...prev, formatted];
+      try {
+        sessionStorage.setItem('photo_upload_logs', JSON.stringify(updated));
+      } catch (e) {
+        console.error('Failed to save logs to sessionStorage', e);
+      }
+      return updated;
+    });
+  }
+
+  function clearLogs() {
+    setLogs([]);
+    try {
+      sessionStorage.removeItem('photo_upload_logs');
+    } catch (e) {
+      console.error('Failed to clear logs from sessionStorage', e);
+    }
+  }
 
   if (currentUrl !== prevUrl) {
     setPreview(currentUrl || null);
@@ -84,7 +115,8 @@ export default function PhotoUpload({ currentUrl, onUpload }) {
   async function handleFileSelect(e) {
     const file = e.target.files?.[0];
     if (!file) return;
-    console.log('[PhotoUpload] Selected file:', file.name, 'type:', file.type, 'size:', file.size);
+    clearLogs(); // Clear logs on new selection
+    addLog(`Selected file: ${file.name} (type: ${file.type}, size: ${file.size})`);
     setErrorMsg('');
 
     const ext = file.name.split('.').pop()?.toLowerCase();
@@ -94,7 +126,7 @@ export default function PhotoUpload({ currentUrl, onUpload }) {
     const isValidType = allowedMimeTypes.includes(file.type) || allowedExts.includes(ext);
     if (!isValidType) {
       const msg = 'Please upload JPG, PNG, or WebP.';
-      console.warn('[PhotoUpload] Invalid file type validation:', file.type, ext);
+      addLog(`Invalid file type: ${file.type} (ext: ${ext})`, 'warn');
       setErrorMsg(msg);
       toast.error(msg);
       e.target.value = '';
@@ -103,14 +135,14 @@ export default function PhotoUpload({ currentUrl, onUpload }) {
 
     if (file.size > 5 * 1024 * 1024) {
       const msg = 'Image must be under 5MB.';
-      console.warn('[PhotoUpload] File too large:', file.size);
+      addLog(`File size exceeds 5MB: ${file.size}`, 'warn');
       setErrorMsg(msg);
       toast.error(msg);
       e.target.value = '';
       return;
     }
 
-    console.log('[PhotoUpload] File validated successfully. Setting local preview...');
+    addLog('File type and size validated successfully. Setting local preview...');
     const reader = new FileReader();
     reader.onload = (event) => setPreview(event.target.result);
     reader.readAsDataURL(file);
@@ -120,21 +152,21 @@ export default function PhotoUpload({ currentUrl, onUpload }) {
 
       if (!user?.id) throw new Error('Not logged in.');
 
-      console.log('[PhotoUpload] Calling sanitizer...');
-      const sanitizedBlob = await sanitizeAndResizeImage(file);
+      addLog('Calling image sanitizer...');
+      const sanitizedBlob = await sanitizeAndResizeImage(file, addLog);
       const filePath = `${user.id}/avatar.jpg`;
 
-      console.log('[PhotoUpload] Uploading to storage path:', filePath);
+      addLog(`Uploading to Supabase Storage: ${filePath}`);
       // Use supabase client (sends user session token automatically)
       const { error: uploadError } = await supabase.storage
         .from('profile-photos')
         .upload(filePath, sanitizedBlob, { upsert: true });
 
       if (uploadError) {
-        console.error('[PhotoUpload] Supabase Storage upload error:', uploadError);
+        addLog(`Supabase Storage upload error: ${uploadError.message}`, 'error');
         throw new Error(`Upload: ${uploadError.message}`);
       }
-      console.log('[PhotoUpload] Supabase Storage upload success.');
+      addLog('Supabase Storage upload succeeded.');
 
       // Get the public URL
       const { data: { publicUrl } } = supabase.storage
@@ -142,26 +174,26 @@ export default function PhotoUpload({ currentUrl, onUpload }) {
         .getPublicUrl(filePath);
 
       const url = `${publicUrl}?t=${Date.now()}`;
-      console.log('[PhotoUpload] Public URL generated:', url);
+      addLog(`Generated public URL: ${url}`);
 
-      console.log('[PhotoUpload] Updating profiles table with profile_photo_url...');
+      addLog('Updating user profile table...');
       const { error: updateError } = await supabase
         .from('profiles')
         .update({ profile_photo_url: url })
         .eq('id', user.id);
 
       if (updateError) {
-        console.error('[PhotoUpload] Profiles table update error:', updateError);
+        addLog(`Profile table update error: ${updateError.message}`, 'error');
         throw new Error(`Profile: ${updateError.message}`);
       }
-      console.log('[PhotoUpload] Profiles table update success.');
+      addLog('Profile table update succeeded!');
 
       setPreview(url);
       setErrorMsg('');
       onUpload?.();
       toast.success('Photo uploaded!');
     } catch (err) {
-      console.error('[PhotoUpload] Upload flow failed:', err);
+      addLog(`Upload flow failed: ${err.message}`, 'error');
       setErrorMsg(err.message);
       toast.error(err.message);
       setPreview(currentUrl || null);
@@ -237,6 +269,7 @@ export default function PhotoUpload({ currentUrl, onUpload }) {
 
       {preview && !uploading && (
         <button
+          type="button"
           onClick={handleRemove}
           className="text-xs text-white/40 hover:text-coral transition-colors font-body z-20"
         >
@@ -247,6 +280,33 @@ export default function PhotoUpload({ currentUrl, onUpload }) {
       <p className="text-xs text-white/30 font-body text-center">
         JPG, PNG or WebP · Max 5MB — Click the circle to upload
       </p>
+
+      {/* Visual Debug Panel */}
+      <div className="w-full mt-4 p-4 rounded-xl bg-white/5 border border-white/10 text-left">
+        <div className="flex justify-between items-center mb-2">
+          <span className="text-xs font-bold text-pink uppercase tracking-wider">Upload Debug Logs</span>
+          {logs.length > 0 && (
+            <button
+              onClick={clearLogs}
+              type="button"
+              className="text-[10px] text-white/40 hover:text-white/80 transition-colors bg-transparent border-0 cursor-pointer"
+            >
+              Clear Logs
+            </button>
+          )}
+        </div>
+        <div className="max-h-40 overflow-y-auto font-mono text-[10px] text-white/60 space-y-1 bg-[#0F0A1E]/40 p-2 rounded border border-white/5">
+          {logs.length === 0 ? (
+            <span className="text-white/20 italic">No logs yet. Select a photo to begin.</span>
+          ) : (
+            logs.map((log, idx) => (
+              <div key={idx} className={`break-all ${log.includes('[ERROR]') ? 'text-red-400 font-semibold' : log.includes('[WARN]') ? 'text-yellow-400' : ''}`}>
+                {log}
+              </div>
+            ))
+          )}
+        </div>
+      </div>
     </div>
   );
 }
