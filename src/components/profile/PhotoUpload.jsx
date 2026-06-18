@@ -82,6 +82,45 @@ export default function PhotoUpload({ currentUrl, onUpload }) {
     }
   }
 
+  async function testStorage() {
+    setErrorMsg('');
+    try {
+      const testContent = new Blob(['test'], { type: 'text/plain' });
+      const testPath = `${user.id}/_test.txt`;
+      const url = `${import.meta.env.VITE_SUPABASE_URL}/storage/v1/object/profile-photos/${testPath}`;
+      const anonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+
+      console.log('Testing storage...');
+      console.log('URL:', url);
+      console.log('Anon key exists:', !!anonKey);
+
+      const res = await fetch(url, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${anonKey}`,
+          'apikey': anonKey,
+          'Content-Type': 'text/plain',
+          'x-upsert': 'true',
+        },
+        body: testContent,
+      });
+
+      console.log('Response status:', res.status);
+
+      if (res.ok) {
+        setErrorMsg('Storage WORKS! Upload successful.');
+        toast.success('Storage test passed!');
+      } else {
+        const text = await res.text().catch(() => '');
+        setErrorMsg(`Storage FAILED (${res.status}): ${text.substring(0, 200)}`);
+        toast.error('Storage test failed - see red text');
+      }
+    } catch (err) {
+      setErrorMsg(`EXCEPTION: ${err.message}`);
+      toast.error(err.message);
+    }
+  }
+
   async function handleRemove() {
     try {
       setUploading(true);
@@ -147,6 +186,16 @@ export default function PhotoUpload({ currentUrl, onUpload }) {
         <p className="text-xs text-red-400 font-body text-center max-w-[300px] break-words bg-red-900/20 px-3 py-2 rounded-lg">
           {errorMsg}
         </p>
+      )}
+
+      {!uploading && (
+        <button
+          onClick={testStorage}
+          type="button"
+          className="text-[10px] text-white/20 hover:text-white/40 underline underline-offset-2"
+        >
+          🔧 Test storage (debug)
+        </button>
       )}
 
       {preview && !uploading && (
