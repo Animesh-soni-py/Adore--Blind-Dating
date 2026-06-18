@@ -1,0 +1,10 @@
+User-agent: *
+Allow: /
+Disallow: /dashboard
+Disallow: /matches
+Disallow: /profile/
+Disallow: /personality-quiz
+Disallow: /admin/
+Disallow: /admin
+
+Sitemap: https://adore--blind-dating.pages.dev/sitemap.xml
