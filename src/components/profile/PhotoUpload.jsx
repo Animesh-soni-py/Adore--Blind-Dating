@@ -5,10 +5,13 @@ import { useToast } from '../../hooks/useToast';
 
 function sanitizeAndResizeImage(file, maxDimension = 1200) {
   return new Promise((resolve, reject) => {
+    console.log('[ImageSanitizer] Starting sanitization for:', file.name, 'type:', file.type, 'size:', file.size);
     const reader = new FileReader();
     reader.onload = (event) => {
+      console.log('[ImageSanitizer] FileReader loaded image data');
       const img = new Image();
       img.onload = () => {
+        console.log('[ImageSanitizer] Image loaded, dimensions:', img.width, 'x', img.height);
         const canvas = document.createElement('canvas');
         let width = img.width;
         let height = img.height;
@@ -22,6 +25,7 @@ function sanitizeAndResizeImage(file, maxDimension = 1200) {
             width = Math.round((width * maxDimension) / height);
             height = maxDimension;
           }
+          console.log('[ImageSanitizer] Rescaled to:', width, 'x', height);
         }
 
         canvas.width = width;
@@ -34,11 +38,13 @@ function sanitizeAndResizeImage(file, maxDimension = 1200) {
 
         // Drawing the image onto canvas strips EXIF metadata (e.g., GPS location tags)
         ctx.drawImage(img, 0, 0, width, height);
+        console.log('[ImageSanitizer] Image drawn to canvas. Converting to JPEG blob...');
 
         // Convert to a clean JPEG blob
         canvas.toBlob(
           (blob) => {
             if (blob) {
+              console.log('[ImageSanitizer] Blob generated, size:', blob.size, 'type:', blob.type);
               resolve(blob);
             } else {
               reject(new Error('Failed to generate image blob'));
@@ -48,10 +54,16 @@ function sanitizeAndResizeImage(file, maxDimension = 1200) {
           0.85
         );
       };
-      img.onerror = () => reject(new Error('Failed to process image file'));
+      img.onerror = (err) => {
+        console.error('[ImageSanitizer] Image loading failed:', err);
+        reject(new Error('Failed to process image file'));
+      };
       img.src = event.target.result;
     };
-    reader.onerror = () => reject(new Error('Failed to read image file'));
+    reader.onerror = (err) => {
+      console.error('[ImageSanitizer] FileReader failed:', err);
+      reject(new Error('Failed to read image file'));
+    };
     reader.readAsDataURL(file);
   });
 }
@@ -73,6 +85,7 @@ export default function PhotoUpload({ currentUrl, onUpload }) {
   async function handleFileSelect(e) {
     const file = e.target.files?.[0];
     if (!file) return;
+    console.log('[PhotoUpload] Selected file:', file.name, 'type:', file.type, 'size:', file.size);
     setErrorMsg('');
 
     const ext = file.name.split('.').pop()?.toLowerCase();
@@ -82,6 +95,7 @@ export default function PhotoUpload({ currentUrl, onUpload }) {
     const isValidType = allowedMimeTypes.includes(file.type) || allowedExts.includes(ext);
     if (!isValidType) {
       const msg = 'Please upload JPG, PNG, or WebP.';
+      console.warn('[PhotoUpload] Invalid file type validation:', file.type, ext);
       setErrorMsg(msg);
       toast.error(msg);
       e.target.value = '';
@@ -90,12 +104,14 @@ export default function PhotoUpload({ currentUrl, onUpload }) {
 
     if (file.size > 5 * 1024 * 1024) {
       const msg = 'Image must be under 5MB.';
+      console.warn('[PhotoUpload] File too large:', file.size);
       setErrorMsg(msg);
       toast.error(msg);
       e.target.value = '';
       return;
     }
 
+    console.log('[PhotoUpload] File validated successfully. Setting local preview...');
     const reader = new FileReader();
     reader.onload = (event) => setPreview(event.target.result);
     reader.readAsDataURL(file);
@@ -105,16 +121,21 @@ export default function PhotoUpload({ currentUrl, onUpload }) {
 
       if (!user?.id) throw new Error('Not logged in.');
 
-      // Client-side image sanitization to strip metadata and compress file
+      console.log('[PhotoUpload] Calling sanitizer...');
       const sanitizedBlob = await sanitizeAndResizeImage(file);
       const filePath = `${user.id}/avatar.jpg`;
 
+      console.log('[PhotoUpload] Uploading to storage path:', filePath);
       // Use supabase client (sends user session token automatically)
       const { error: uploadError } = await supabase.storage
         .from('profile-photos')
         .upload(filePath, sanitizedBlob, { upsert: true });
 
-      if (uploadError) throw new Error(`Upload: ${uploadError.message}`);
+      if (uploadError) {
+        console.error('[PhotoUpload] Supabase Storage upload error:', uploadError);
+        throw new Error(`Upload: ${uploadError.message}`);
+      }
+      console.log('[PhotoUpload] Supabase Storage upload success.');
 
       // Get the public URL
       const { data: { publicUrl } } = supabase.storage
@@ -122,19 +143,26 @@ export default function PhotoUpload({ currentUrl, onUpload }) {
         .getPublicUrl(filePath);
 
       const url = `${publicUrl}?t=${Date.now()}`;
+      console.log('[PhotoUpload] Public URL generated:', url);
 
+      console.log('[PhotoUpload] Updating profiles table with profile_photo_url...');
       const { error: updateError } = await supabase
         .from('profiles')
         .update({ profile_photo_url: url })
         .eq('id', user.id);
 
-      if (updateError) throw new Error(`Profile: ${updateError.message}`);
+      if (updateError) {
+        console.error('[PhotoUpload] Profiles table update error:', updateError);
+        throw new Error(`Profile: ${updateError.message}`);
+      }
+      console.log('[PhotoUpload] Profiles table update success.');
 
       setPreview(url);
       setErrorMsg('');
       onUpload?.();
       toast.success('Photo uploaded!');
     } catch (err) {
+      console.error('[PhotoUpload] Upload flow failed:', err);
       setErrorMsg(err.message);
       toast.error(err.message);
       setPreview(currentUrl || null);
