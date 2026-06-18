@@ -11,7 +11,7 @@ const floatingHearts = [
 
 export default function CTASection() {
   return (
-    <section className="relative py-20 lg:py-5xl overflow-hidden" style={{ background: 'linear-gradient(135deg, #2D1B69 0%, #3D1A78 50%, #FF5E8A 150%)' }} aria-label="Call to action">
+    <section className="relative py-12 lg:py-5xl overflow-hidden" style={{ background: 'linear-gradient(135deg, #2D1B69 0%, #3D1A78 50%, #FF5E8A 150%)' }} aria-label="Call to action">
       {/* Floating hearts */}
       {floatingHearts.map((heart, i) => (
         <div

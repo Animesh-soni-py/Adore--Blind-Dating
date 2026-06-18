@@ -73,7 +73,7 @@ export default function TestimonialsSection() {
   return (
     <section
       id="testimonials"
-      className="py-20 lg:py-5xl scroll-mt-20"
+      className="py-12 lg:py-5xl scroll-mt-20"
       style={{ background: 'linear-gradient(180deg, #0F0A1E 0%, #1A1A2E 50%, #2D1B69 100%)' }}
       aria-label="Testimonials"
     >

@@ -63,9 +63,9 @@ export default function Footer() {
   return (
     <>
       <hr className="section-divider" />
-      <footer className="bg-dark py-10 lg:py-20" role="contentinfo">
+      <footer className="bg-dark py-8 lg:py-16" role="contentinfo">
       <div className="container-adore">
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-6 lg:gap-8">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-x-4 gap-y-6 lg:gap-8">
           {/* Col 1: Logo + Tagline + Social (full width on mobile) */}
           <div className="col-span-2 lg:col-span-1">
             <div className="flex items-center gap-1.5 mb-3">
@@ -101,7 +101,7 @@ export default function Footer() {
                 <li key={link.label}>
                   <Link
                     to={link.href}
-                    className="text-xs lg:text-sm text-white/40 hover:text-white transition-colors duration-200 min-h-[36px] flex items-center"
+                    className="text-xs lg:text-sm text-white/40 hover:text-white transition-colors duration-200 min-h-[30px] sm:min-h-[36px] flex items-center"
                   >
                     {link.label}
                   </Link>
@@ -120,7 +120,7 @@ export default function Footer() {
                 <li key={link.label}>
                   <Link
                     to={link.href}
-                    className="text-xs lg:text-sm text-white/40 hover:text-white transition-colors duration-200 min-h-[36px] flex items-center"
+                    className="text-xs lg:text-sm text-white/40 hover:text-white transition-colors duration-200 min-h-[30px] sm:min-h-[36px] flex items-center"
                   >
                     {link.label}
                   </Link>
@@ -165,7 +165,7 @@ export default function Footer() {
         </div>
 
         {/* Bottom Bar */}
-        <div className="mt-10 lg:mt-16 pt-6 lg:pt-8 border-t border-white/10 flex flex-col sm:flex-row items-center justify-between gap-3 lg:gap-4">
+        <div className="mt-6 lg:mt-16 pt-4 lg:pt-8 border-t border-white/10 flex flex-col sm:flex-row items-center justify-between gap-2 lg:gap-4">
           <p className="text-[10px] lg:text-xs text-white/25">
             © {new Date().getFullYear()} ADORE Blind Dating. All rights reserved.
           </p>
@@ -174,7 +174,7 @@ export default function Footer() {
               <Link
                 key={link.label}
                 to={link.href}
-                className="text-[10px] lg:text-xs text-white/25 hover:text-white/50 transition-colors min-h-[36px] flex items-center"
+                className="text-[10px] lg:text-xs text-white/25 hover:text-white/50 transition-colors min-h-[28px] sm:min-h-[36px] flex items-center"
               >
                 {link.label}
               </Link>

@@ -69,7 +69,7 @@ export default function HeroSection() {
         </div>
       ))}
 
-      <div className="container-adore relative z-10 py-32 lg:py-20">
+      <div className="container-adore relative z-10 py-16 lg:py-24">
         <div className="grid grid-cols-1 lg:grid-cols-[55%_45%] gap-12 lg:gap-8 items-center">
           {/* Left: Copy */}
           <div>

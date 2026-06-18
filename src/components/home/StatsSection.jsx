@@ -56,7 +56,7 @@ function CountUp({ target, suffix, duration = 2000 }) {
 
 export default function StatsSection() {
   return (
-    <section className="bg-dark py-16 lg:py-20 relative overflow-hidden" aria-label="Statistics">
+    <section className="bg-dark py-10 lg:py-20 relative overflow-hidden" aria-label="Statistics">
       {/* Ambient glow */}
       <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] rounded-full pointer-events-none" style={{ background: 'radial-gradient(circle, rgba(255,94,138,0.06) 0%, transparent 70%)' }} />
 

@@ -92,7 +92,7 @@ export default function ContactPage() {
     <main className="pt-[72px] min-h-screen" style={{ background: '#0F0A1E' }} id="main-content">
         {/* Header */}
         <section
-          className="py-20 lg:py-28 text-center"
+          className="py-12 lg:py-24 text-center"
           style={{ background: 'linear-gradient(135deg, #1A1A2E 0%, #2D1B69 50%, #1A1A2E 100%)' }}
         >
           <div className="container-adore">
@@ -124,7 +124,7 @@ export default function ContactPage() {
         </section>
 
         {/* Content */}
-        <section className="py-16 lg:py-24">
+        <section className="py-10 lg:py-20">
           <div className="container-adore">
             <div className="grid grid-cols-1 lg:grid-cols-[1fr_1.2fr] gap-12 lg:gap-16">
               {/* Left: Contact Info */}

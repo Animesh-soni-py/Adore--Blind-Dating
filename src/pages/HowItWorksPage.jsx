@@ -56,7 +56,7 @@ export default function HowItWorksPage() {
     <main className="pt-[72px] min-h-screen" style={{ background: '#0F0A1E' }} id="main-content">
         {/* Breadcrumb + Hero */}
         <section
-          className="py-20 lg:py-28 text-center"
+          className="py-12 lg:py-24 text-center"
           style={{ background: 'linear-gradient(135deg, #1A1A2E 0%, #2D1B69 50%, #1A1A2E 100%)' }}
         >
           <div className="container-adore">
@@ -91,7 +91,7 @@ export default function HowItWorksPage() {
         </section>
 
         {/* Steps */}
-        <section className="py-16 lg:py-24">
+        <section className="py-10 lg:py-20">
           <div className="container-adore max-w-[900px]">
             <div className="space-y-8">
               {steps.map((step, i) => (
@@ -131,7 +131,7 @@ export default function HowItWorksPage() {
         </section>
 
         {/* FAQ Section */}
-        <section className="py-16 lg:py-24 border-t border-white/5">
+        <section className="py-10 lg:py-20 border-t border-white/5">
           <div className="container-adore max-w-[800px]">
             <motion.div
               className="text-center mb-12"
@@ -170,7 +170,7 @@ export default function HowItWorksPage() {
         </section>
 
         {/* CTA */}
-        <section className="py-20 lg:py-28 text-center">
+        <section className="py-12 lg:py-24 text-center">
           <div className="container-adore">
             <motion.h2
               className="font-display text-3xl md:text-4xl font-extrabold text-white mb-4 italic"

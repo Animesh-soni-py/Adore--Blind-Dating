@@ -82,7 +82,7 @@ export default function PricingSection() {
   }
 
   return (
-    <section id="pricing" className="py-20 lg:py-5xl scroll-mt-20" style={{ background: 'linear-gradient(180deg, #0F0A1E 0%, #1A1A2E 100%)' }} aria-label="Pricing">
+    <section id="pricing" className="py-12 lg:py-5xl scroll-mt-20" style={{ background: 'linear-gradient(180deg, #0F0A1E 0%, #1A1A2E 100%)' }} aria-label="Pricing">
       <div className="container-adore">
         {profile?.is_premium ? (
           <div className="text-center max-w-[500px] mx-auto py-12">

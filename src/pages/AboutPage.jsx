@@ -28,7 +28,7 @@ export default function AboutPage() {
   return (
     <main className="pt-[72px]" id="main-content">
         {/* Hero */}
-        <section className="bg-dark py-20 lg:py-5xl text-center">
+        <section className="bg-dark py-12 lg:py-5xl text-center">
           <div className="container-adore">
             <h1 className="font-display text-section-h2 font-extrabold text-white mb-5">
               We&apos;re on a Mission to Make Dating{' '}
@@ -46,7 +46,7 @@ export default function AboutPage() {
         </section>
 
         {/* Values */}
-        <section className="py-20 lg:py-5xl" style={{ background: '#0F0A1E' }}>
+        <section className="py-12 lg:py-5xl" style={{ background: '#0F0A1E' }}>
           <div className="container-adore">
             <div className="text-center mb-14">
               <p className="font-display text-caption font-bold tracking-[3px] uppercase text-pink mb-4">
@@ -70,7 +70,7 @@ export default function AboutPage() {
         </section>
 
         {/* Story */}
-        <section className="py-20 lg:py-5xl" style={{ background: 'linear-gradient(180deg, #0F0A1E 0%, #1A1A2E 100%)' }}>
+        <section className="py-12 lg:py-5xl" style={{ background: 'linear-gradient(180deg, #0F0A1E 0%, #1A1A2E 100%)' }}>
           <div className="container-adore max-w-[700px]">
             <p className="font-display text-caption font-bold tracking-[3px] uppercase text-pink mb-4 text-center">
               Our Story

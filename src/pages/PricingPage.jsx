@@ -30,7 +30,7 @@ export default function PricingPage() {
         <PricingSection />
 
         {/* Billing FAQ */}
-        <section className="py-20 lg:py-5xl" style={{ background: 'linear-gradient(180deg, #0F0A1E 0%, #1A1A2E 100%)' }} aria-label="Billing FAQ">
+        <section className="py-12 lg:py-5xl" style={{ background: 'linear-gradient(180deg, #0F0A1E 0%, #1A1A2E 100%)' }} aria-label="Billing FAQ">
           <div className="container-adore">
             <div className="text-center mb-14">
               <p className="font-display text-caption font-bold tracking-[3px] uppercase text-pink mb-4 italic">
