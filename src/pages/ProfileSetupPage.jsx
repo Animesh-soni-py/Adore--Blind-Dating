@@ -411,7 +411,6 @@ function SetupInner() {
     }
   }
 
-  // Auto-advance for select type on click
   function handleSelectAndAdvance(value) {
     setAnswer(value);
     if (currentStep < totalSteps - 1) {
@@ -438,7 +437,7 @@ function SetupInner() {
       case 'range':
         return <RangeStep value={getAnswer()} onChange={setAnswer} min={step.min} max={step.max} />;
       case 'rating':
-        return <RatingStep value={getAnswer()} onChange={setAnswer} />;
+        return <RatingStep value={getAnswer()} onChange={handleSelectAndAdvance} />;
       case 'multiselect':
         return <MultiSelectStep value={getAnswer()} onChange={setAnswer} />;
       default:

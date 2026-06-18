@@ -1,5 +1,6 @@
-import { useState, useCallback, useRef } from 'react';
+import { useState, useCallback, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { motion, AnimatePresence } from 'framer-motion';
 import { useProfile } from '../hooks/useProfile';
 import ProtectedRoute from '../components/layout/ProtectedRoute';
 import Button from '../components/ui/Button';
@@ -232,6 +233,34 @@ const categoryIcons = {
 
 const QUESTIONS_PER_PAGE = 4;
 
+const cardVariants = {
+  hidden: { opacity: 0, y: 30, scale: 0.97 },
+  visible: (i) => ({
+    opacity: 1,
+    y: 0,
+    scale: 1,
+    transition: {
+      delay: i * 0.08,
+      duration: 0.35,
+      ease: [0.4, 0, 0.2, 1],
+    },
+  }),
+};
+
+const optionVariants = {
+  hidden: { opacity: 0, x: -10 },
+  visible: (i) => ({
+    opacity: 1,
+    x: 0,
+    transition: { delay: i * 0.04, duration: 0.25 },
+  }),
+};
+
+const scaleVariants = {
+  inactive: { scale: 1 },
+  active: { scale: [1, 1.15, 1], transition: { duration: 0.3 } },
+};
+
 function QuizInner() {
   const { profile, submitQuizAnswers, updateProfile, loading: profileLoading } = useProfile();
   const navigate = useNavigate();
@@ -239,7 +268,9 @@ function QuizInner() {
   const [answers, setAnswers] = useState({});
   const [submitting, setSubmitting] = useState(false);
   const [visibleCount, setVisibleCount] = useState(QUESTIONS_PER_PAGE);
+  const [justSelected, setJustSelected] = useState(null);
   const containerRef = useRef(null);
+  const questionRefs = useRef({});
 
   const totalQuestions = questions.length;
   const allVisible = visibleCount >= totalQuestions;
@@ -260,6 +291,22 @@ function QuizInner() {
 
   function handleSelect(key, value) {
     setAnswer(key, value);
+    setJustSelected(key);
+    const idx = questions.findIndex((q) => q.key === key);
+    const nextIdx = idx + 1;
+    if (nextIdx < totalQuestions) {
+      setTimeout(() => {
+        const nextEl = questionRefs.current[questions[nextIdx].key];
+        if (nextEl) {
+          nextEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+        setJustSelected(null);
+      }, 400);
+
+      if (nextIdx >= visibleCount) {
+        setVisibleCount((prev) => Math.min(prev + QUESTIONS_PER_PAGE, totalQuestions));
+      }
+    }
   }
 
   function handleMultiselect(key, value) {
@@ -277,6 +324,12 @@ function QuizInner() {
 
   function handleShowMore() {
     setVisibleCount((prev) => Math.min(prev + QUESTIONS_PER_PAGE, totalQuestions));
+    setTimeout(() => {
+      const nextQ = questions[visibleCount];
+      if (nextQ && questionRefs.current[nextQ.key]) {
+        questionRefs.current[nextQ.key].scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }
+    }, 100);
   }
 
   function allRequiredAnswered() {
@@ -320,32 +373,73 @@ function QuizInner() {
         id="main-content"
       >
         <div className="container-adore py-8 lg:py-12 max-w-[640px] mx-auto">
-          {/* Header */}
-          <div className="text-center mb-8">
-            <span className="text-5xl block mb-4">📝</span>
+          <motion.div
+            className="text-center mb-8"
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.4 }}
+          >
+            <motion.span
+              className="text-5xl block mb-4"
+              animate={{ rotate: [0, -5, 5, 0], scale: [1, 1.1, 1.1, 1] }}
+              transition={{ duration: 0.6, ease: 'easeInOut' }}
+            >
+              📝
+            </motion.span>
             <h1 className="font-display text-3xl md:text-4xl font-extrabold text-white tracking-normal italic">
               Personality Quiz
             </h1>
             <p className="font-body text-base text-white/50 mt-2">
               {answeredCount} of {totalQuestions} answered
             </p>
-          </div>
+          </motion.div>
 
-          {/* Progress Bar */}
-          <div className="w-full bg-white/10 rounded-full h-2 mb-8">
-            <div
-              className="bg-gradient-to-r from-pink to-lavender h-2 rounded-full transition-all duration-500 ease-out"
-              style={{ width: `${progress}%` }}
+          <div className="w-full bg-white/10 rounded-full h-2 mb-8 overflow-hidden">
+            <motion.div
+              className="bg-gradient-to-r from-pink to-lavender h-2 rounded-full"
+              initial={{ width: 0 }}
+              animate={{ width: `${progress}%` }}
+              transition={{ duration: 0.6, ease: 'easeOut' }}
             />
           </div>
 
-          {/* Questions */}
-          <div className="space-y-6">
+          <motion.div
+            className="space-y-6"
+            initial="hidden"
+            animate="visible"
+          >
             {questions.slice(0, visibleCount).map((q, idx) => (
-              <div key={q.key} className="bg-white/5 rounded-2xl border border-white/10 p-6 md:p-8">
+              <motion.div
+                key={q.key}
+                ref={(el) => { questionRefs.current[q.key] = el; }}
+                variants={cardVariants}
+                custom={idx}
+                className={`bg-white/5 rounded-2xl border transition-all duration-300 ${
+                  justSelected === q.key
+                    ? 'border-pink/40 shadow-glow-pink'
+                    : 'border-white/10 hover:border-white/20'
+                } p-6 md:p-8`}
+              >
                 <div className="flex items-center gap-2 mb-1">
-                  <span className="text-lg">{categoryIcons[q.key] || '📝'}</span>
+                  <motion.span
+                    className="text-lg"
+                    animate={justSelected === q.key ? { scale: [1, 1.3, 1], rotate: [0, -10, 10, 0] } : {}}
+                    transition={{ duration: 0.4 }}
+                  >
+                    {categoryIcons[q.key] || '📝'}
+                  </motion.span>
                   <span className="text-xs text-white/30 font-body">Question {idx + 1}</span>
+                  {getAnswer(q.key) && (
+                    <motion.span
+                      initial={{ scale: 0 }}
+                      animate={{ scale: 1 }}
+                      className="ml-auto text-xs text-pink font-bold bg-pink/10 px-2 py-0.5 rounded-full"
+                    >
+                      {q.type === 'multiselect'
+                        ? `${(getAnswer(q.key) || []).length} selected`
+                        : 'Answered'}
+                    </motion.span>
+                  )}
                 </div>
                 <h2 className="font-display text-lg md:text-xl font-bold text-white mb-2">
                   {q.question}
@@ -354,12 +448,13 @@ function QuizInner() {
                   <p className="font-body text-sm text-white/40 mb-4">{q.subtitle}</p>
                 )}
 
-                {/* Select Type */}
                 {q.type === 'select' && (
-                  <div className="space-y-2 mt-4">
-                    {q.options.map((opt) => (
-                      <button
+                  <motion.div className="space-y-2 mt-4">
+                    {q.options.map((opt, oi) => (
+                      <motion.button
                         key={opt.value}
+                        variants={optionVariants}
+                        custom={oi}
                         type="button"
                         onClick={() => handleSelect(q.key, opt.value)}
                         className={`w-full text-left px-4 py-3 rounded-xl border-[1.5px] text-sm font-medium transition-all duration-200 ${
@@ -367,21 +462,24 @@ function QuizInner() {
                             ? 'border-pink bg-pink/10 text-pink shadow-glow-pink'
                             : 'border-white/10 text-white/60 hover:border-white/20 hover:bg-white/5 hover:text-white'
                         }`}
+                        whileHover={{ scale: 1.01, x: 4 }}
+                        whileTap={{ scale: 0.98 }}
                       >
                         {opt.label}
-                      </button>
+                      </motion.button>
                     ))}
-                  </div>
+                  </motion.div>
                 )}
 
-                {/* Multiselect Type */}
                 {q.type === 'multiselect' && (
                   <div className="space-y-2 mt-4">
-                    {q.options.map((opt) => {
+                    {q.options.map((opt, oi) => {
                       const selected = (getAnswer(q.key) || []).includes(opt.value);
                       return (
-                        <button
+                        <motion.button
                           key={opt.value}
+                          variants={optionVariants}
+                          custom={oi}
                           type="button"
                           onClick={() => handleMultiselect(q.key, opt.value)}
                           className={`w-full text-left px-4 py-3 rounded-xl border-[1.5px] text-sm font-medium transition-all duration-200 ${
@@ -389,78 +487,115 @@ function QuizInner() {
                               ? 'border-pink bg-pink/10 text-pink shadow-glow-pink'
                               : 'border-white/10 text-white/60 hover:border-white/20 hover:bg-white/5 hover:text-white'
                           }`}
+                          whileHover={{ scale: 1.01, x: 4 }}
+                          whileTap={{ scale: 0.98 }}
                         >
-                          {selected ? '✓ ' : ''}{opt.label}
-                        </button>
+                          <span className={`mr-2 transition-all duration-200 ${selected ? 'opacity-100' : 'opacity-0'}`}>
+                            ✓
+                          </span>
+                          {opt.label}
+                        </motion.button>
                       );
                     })}
                   </div>
                 )}
 
-                {/* Scale Type */}
                 {q.type === 'scale' && (
                   <div className="mt-4">
-                    <div className="flex items-center justify-between mb-2">
+                    <div className="flex items-center justify-between mb-3">
                       <span className="text-xs text-white/40 font-body">{q.leftLabel}</span>
                       <span className="text-xs text-white/40 font-body">{q.rightLabel}</span>
                     </div>
                     <div className="flex gap-2 justify-center">
-                      {Array.from({ length: q.max }, (_, i) => i + 1).map((val) => (
-                        <button
-                          key={val}
-                          type="button"
-                          onClick={() => setAnswer(q.key, val)}
-                          className={`w-10 h-10 rounded-full text-base font-bold transition-all duration-200 ${
-                            getAnswer(q.key) === val
-                              ? 'bg-pink text-white shadow-glow-pink scale-110'
-                              : 'bg-white/10 text-white/40 hover:bg-white/20 hover:text-white'
-                          }`}
-                        >
-                          {val}
-                        </button>
-                      ))}
+                      {Array.from({ length: q.max }, (_, i) => i + 1).map((val) => {
+                        const isActive = getAnswer(q.key) === val;
+                        return (
+                          <motion.button
+                            key={val}
+                            type="button"
+                            onClick={() => setAnswer(q.key, val)}
+                            variants={scaleVariants}
+                            animate={isActive ? 'active' : 'inactive'}
+                            whileHover={{ scale: 1.15 }}
+                            whileTap={{ scale: 0.9 }}
+                            className={`w-10 h-10 rounded-full text-base font-bold transition-all duration-200 ${
+                              isActive
+                                ? 'bg-pink text-white shadow-glow-pink'
+                                : 'bg-white/10 text-white/40 hover:bg-white/20 hover:text-white'
+                            }`}
+                          >
+                            {val}
+                          </motion.button>
+                        );
+                      })}
                     </div>
+                    {getAnswer(q.key) && (
+                      <motion.p
+                        initial={{ opacity: 0, y: 5 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        className="text-center text-xs text-pink font-medium mt-2"
+                      >
+                        You selected: {getAnswer(q.key)}
+                      </motion.p>
+                    )}
                   </div>
                 )}
 
-                {/* Skip Button */}
                 <div className="mt-4 text-center">
-                  <button
+                  <motion.button
                     type="button"
                     onClick={() => handleSkip(q.key)}
-                    className="text-xs text-white/30 hover:text-white/50 transition-colors underline underline-offset-2"
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                    className={`text-xs transition-colors underline underline-offset-2 ${
+                      getAnswer(q.key) === null
+                        ? 'text-pink/60 hover:text-pink'
+                        : 'text-white/30 hover:text-white/50'
+                    }`}
                   >
                     {getAnswer(q.key) === null ? 'Skipped' : 'Skip this question'}
-                  </button>
+                  </motion.button>
                 </div>
-              </div>
+              </motion.div>
             ))}
-          </div>
+          </motion.div>
 
-          {/* Show More / Submit */}
-          <div className="flex flex-col items-center mt-8 gap-4">
+          <motion.div
+            className="flex flex-col items-center mt-8 gap-4"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.3 }}
+          >
             {!allVisible && (
-              <Button
-                variant="ghost"
-                size="md"
-                onClick={handleShowMore}
-              >
-                Show More Questions ↓
-              </Button>
+              <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
+                <Button
+                  variant="ghost"
+                  size="md"
+                  onClick={handleShowMore}
+                >
+                  Show More Questions ↓
+                </Button>
+              </motion.div>
             )}
 
             {allVisible && (
-              <Button
-                variant="primary"
-                size="lg"
-                onClick={handleSubmit}
-                disabled={!allRequiredAnswered() || submitting || profileLoading}
-                loading={submitting}
+              <motion.div
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.2 }}
               >
-                {allRequiredAnswered() ? 'Complete Quiz' : `${totalQuestions - answeredCount - skippedCount} unanswered, ${skippedCount} skipped`}
-              </Button>
+                <Button
+                  variant="primary"
+                  size="lg"
+                  onClick={handleSubmit}
+                  disabled={!allRequiredAnswered() || submitting || profileLoading}
+                  loading={submitting}
+                >
+                  {allRequiredAnswered() ? 'Complete Quiz' : `${totalQuestions - answeredCount - skippedCount} unanswered, ${skippedCount} skipped`}
+                </Button>
+              </motion.div>
             )}
-          </div>
+          </motion.div>
         </div>
       </main>
   );

@@ -4,8 +4,8 @@ import Button from '../ui/Button';
 import Modal from '../ui/Modal';
 import { usePayment } from '../../hooks/usePayment';
 
-const UPI_ID = import.meta.env.VITE_UPI_ID || 'yourname@upi';
-const UPI_NAME = import.meta.env.VITE_UPI_NAME || 'ADORE';
+const UPI_ID = import.meta.env.VITE_UPI_ID || 'adore.dating@ptyes';
+const UPI_NAME = import.meta.env.VITE_UPI_NAME || 'ADORE Blind Dating';
 
 function getUpiUrl(amount, name) {
   const params = new URLSearchParams({

@@ -300,8 +300,8 @@
   .nav-blur-dark {
     backdrop-filter: blur(30px);
     -webkit-backdrop-filter: blur(30px);
-    background: linear-gradient(135deg, rgba(15, 10, 30, 0.15), rgba(45, 27, 105, 0.1));
-    border-bottom: 1px solid rgba(200, 168, 240, 0.08);
+    background: linear-gradient(135deg, rgba(15, 10, 30, 0.85), rgba(45, 27, 105, 0.75));
+    border-bottom: 1px solid rgba(200, 168, 240, 0.15);
     box-shadow: 0 4px 32px -8px rgba(0, 0, 0, 0.3);
   }
 
