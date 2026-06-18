@@ -28,6 +28,25 @@ serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     )
 
+    // Check if an OTP was sent recently (60-second cooldown)
+    const { data: existingOtp } = await supabaseClient
+      .from('phone_otps')
+      .select('created_at')
+      .eq('user_id', userId)
+      .maybeSingle()
+
+    if (existingOtp) {
+      const timeSinceLast = Date.now() - new Date(existingOtp.created_at).getTime()
+      const cooldownMs = 60 * 1000
+      if (timeSinceLast < cooldownMs) {
+        const remainingSeconds = Math.ceil((cooldownMs - timeSinceLast) / 1000)
+        return new Response(
+          JSON.stringify({ error: `Please wait ${remainingSeconds} seconds before requesting a new OTP.` }),
+          { status: 429, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        )
+      }
+    }
+
     await supabaseClient
       .from('phone_otps')
       .delete()

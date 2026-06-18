@@ -36,7 +36,7 @@ serve(async (req) => {
   }
 
   try {
-    const { email } = await req.json()
+    const { email, siteUrl } = await req.json()
 
     if (!email) {
       return new Response(
@@ -50,8 +50,21 @@ serve(async (req) => {
       Deno.env.get('SUPABASE_ANON_KEY') ?? ''
     )
 
+    const originHeader = req.headers.get('origin')
+    const refererHeader = req.headers.get('referer')
+    let fallbackOrigin = 'https://adoreblinddating.netlify.app'
+    if (originHeader) {
+      fallbackOrigin = originHeader
+    } else if (refererHeader) {
+      try {
+        const parsed = new URL(refererHeader)
+        fallbackOrigin = parsed.origin
+      } catch (_e) { /* ignore */ }
+    }
+
+    const redirectOrigin = siteUrl || fallbackOrigin
     const { error } = await supabaseClient.auth.resetPasswordForEmail(email, {
-      redirectTo: `https://adoreblinddating.netlify.app/reset-password`,
+      redirectTo: `${redirectOrigin}/reset-password`,
     })
 
     if (error) throw error

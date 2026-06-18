@@ -3,6 +3,59 @@ import { supabase } from '../../lib/supabase';
 import { useAuth } from '../../hooks/useAuth';
 import { useToast } from '../../hooks/useToast';
 
+function sanitizeAndResizeImage(file, maxDimension = 1200) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const img = new Image();
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        let width = img.width;
+        let height = img.height;
+
+        // Scale down if any dimension exceeds the maximum threshold
+        if (width > maxDimension || height > maxDimension) {
+          if (width > height) {
+            height = Math.round((height * maxDimension) / width);
+            width = maxDimension;
+          } else {
+            width = Math.round((width * maxDimension) / height);
+            height = maxDimension;
+          }
+        }
+
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext('2d');
+        if (!ctx) {
+          reject(new Error('Failed to initialize canvas context'));
+          return;
+        }
+
+        // Drawing the image onto canvas strips EXIF metadata (e.g., GPS location tags)
+        ctx.drawImage(img, 0, 0, width, height);
+
+        // Convert to a clean JPEG blob
+        canvas.toBlob(
+          (blob) => {
+            if (blob) {
+              resolve(blob);
+            } else {
+              reject(new Error('Failed to generate image blob'));
+            }
+          },
+          'image/jpeg',
+          0.85
+        );
+      };
+      img.onerror = () => reject(new Error('Failed to process image file'));
+      img.src = event.target.result;
+    };
+    reader.onerror = () => reject(new Error('Failed to read image file'));
+    reader.readAsDataURL(file);
+  });
+}
+
 export default function PhotoUpload({ currentUrl, onUpload }) {
   const { user } = useAuth();
   const toast = useToast();
@@ -16,14 +69,25 @@ export default function PhotoUpload({ currentUrl, onUpload }) {
     if (!file) return;
     setErrorMsg('');
 
-    const allowed = ['image/jpeg', 'image/png', 'image/webp'];
-    if (!allowed.includes(file.type)) {
+    const ext = file.name.split('.').pop()?.toLowerCase();
+    const allowedExts = ['jpg', 'jpeg', 'png', 'webp'];
+    const allowedMimeTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp', 'image/pjpeg', 'image/x-png'];
+
+    const isValidType = allowedMimeTypes.includes(file.type) || allowedExts.includes(ext);
+    if (!isValidType) {
       const msg = 'Please upload JPG, PNG, or WebP.';
-      setErrorMsg(msg); toast.error(msg); return;
+      setErrorMsg(msg);
+      toast.error(msg);
+      e.target.value = '';
+      return;
     }
+
     if (file.size > 5 * 1024 * 1024) {
       const msg = 'Image must be under 5MB.';
-      setErrorMsg(msg); toast.error(msg); return;
+      setErrorMsg(msg);
+      toast.error(msg);
+      e.target.value = '';
+      return;
     }
 
     const reader = new FileReader();
@@ -35,13 +99,14 @@ export default function PhotoUpload({ currentUrl, onUpload }) {
 
       if (!user?.id) throw new Error('Not logged in.');
 
-      const ext = file.name.split('.').pop();
-      const filePath = `${user.id}/avatar.${ext}`;
+      // Client-side image sanitization to strip metadata and compress file
+      const sanitizedBlob = await sanitizeAndResizeImage(file);
+      const filePath = `${user.id}/avatar.jpg`;
 
       // Use supabase client (sends user session token automatically)
       const { error: uploadError } = await supabase.storage
         .from('profile-photos')
-        .upload(filePath, file, { upsert: true });
+        .upload(filePath, sanitizedBlob, { upsert: true });
 
       if (uploadError) throw new Error(`Upload: ${uploadError.message}`);
 
@@ -69,6 +134,7 @@ export default function PhotoUpload({ currentUrl, onUpload }) {
       setPreview(currentUrl || null);
     } finally {
       setUploading(false);
+      e.target.value = '';
     }
   }
 
@@ -90,24 +156,6 @@ export default function PhotoUpload({ currentUrl, onUpload }) {
       toast.error(err.message);
     } finally {
       setUploading(false);
-    }
-  }
-
-  async function testStorage() {
-    setErrorMsg('');
-    if (!user?.id) { setErrorMsg('Not logged in'); return; }
-    try {
-      const blob = new Blob(['test'], { type: 'text/plain' });
-      const path = `${user.id}/_test.txt`;
-      const { error } = await supabase.storage
-        .from('profile-photos')
-        .upload(path, blob, { upsert: true });
-      if (error) throw error;
-      setErrorMsg('Storage works!');
-      toast.success('Storage OK');
-    } catch (err) {
-      setErrorMsg(`Storage error: ${err.message}`);
-      toast.error(err.message);
     }
   }
 

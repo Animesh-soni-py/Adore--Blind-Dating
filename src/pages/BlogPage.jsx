@@ -1,6 +1,5 @@
 import { Link } from 'react-router-dom';
 import Badge from '../components/ui/Badge';
-import Button from '../components/ui/Button';
 import { posts } from '../data/blogPosts';
 
 function BlogCard({ post }) {

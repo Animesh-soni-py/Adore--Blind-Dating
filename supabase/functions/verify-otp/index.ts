@@ -26,18 +26,17 @@ serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     )
 
-    // Look up the OTP
+    // Look up the OTP record for this user and phone
     const { data: otpRecord, error: lookupError } = await supabaseClient
       .from('phone_otps')
       .select('*')
       .eq('user_id', userId)
       .eq('phone', phone)
-      .eq('otp', otp)
-      .single()
+      .maybeSingle()
 
     if (lookupError || !otpRecord) {
       return new Response(
-        JSON.stringify({ verified: false, error: 'Invalid OTP' }),
+        JSON.stringify({ verified: false, error: 'No active OTP found for this number' }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       )
     }
@@ -48,6 +47,36 @@ serve(async (req) => {
       await supabaseClient.from('phone_otps').delete().eq('id', otpRecord.id)
       return new Response(
         JSON.stringify({ verified: false, error: 'OTP has expired' }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      )
+    }
+
+    const MAX_ATTEMPTS = 5
+
+    // Validate the OTP code
+    if (otpRecord.otp !== otp) {
+      // Increment and update attempts count on failure
+      const currentAttempts = (otpRecord.attempts || 0) + 1
+      await supabaseClient
+        .from('phone_otps')
+        .update({ attempts: currentAttempts })
+        .eq('id', otpRecord.id)
+
+      // Block verification if attempts limit exceeded, and delete the OTP
+      if (currentAttempts >= MAX_ATTEMPTS) {
+        await supabaseClient.from('phone_otps').delete().eq('id', otpRecord.id)
+        return new Response(
+          JSON.stringify({ verified: false, error: 'Too many failed attempts. Please request a new OTP.' }),
+          { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        )
+      }
+
+      const remaining = MAX_ATTEMPTS - currentAttempts;
+      return new Response(
+        JSON.stringify({ 
+          verified: false, 
+          error: `Invalid OTP. ${remaining} attempts remaining.` 
+        }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       )
     }

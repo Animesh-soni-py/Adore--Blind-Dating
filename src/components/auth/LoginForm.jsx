@@ -73,7 +73,7 @@ export default function LoginForm() {
   async function onResetPassword(data) {
     try {
       setResetLoading(true);
-      const { data: fnData, error: fnError } = await supabase.functions.invoke('forgot-password', {
+      const { error: fnError } = await supabase.functions.invoke('forgot-password', {
         body: { email: data.resetEmail, siteUrl: window.location.origin },
       });
       if (fnError) throw fnError;

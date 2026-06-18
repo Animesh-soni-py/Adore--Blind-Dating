@@ -55,9 +55,34 @@ serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     )
 
+    // Fetch the verification record first to prevent IDOR parameter tampering
+    const { data: verification, error: verificationError } = await adminClient
+      .from('payment_verifications')
+      .select('user_id, plan_name, period, status')
+      .eq('id', verificationId)
+      .maybeSingle()
+
+    if (verificationError || !verification) {
+      return new Response(
+        JSON.stringify({ error: 'Payment verification record not found' }),
+        { status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      )
+    }
+
+    if (verification.status !== 'pending') {
+      return new Response(
+        JSON.stringify({ error: 'This payment has already been verified or rejected' }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      )
+    }
+
+    const targetUserId = verification.user_id;
+    const targetPlanName = verification.plan_name;
+    const targetPeriod = verification.period;
+
     if (action === 'verify') {
       const expiresAt = new Date()
-      if (period === 'yearly') {
+      if (targetPeriod === 'yearly') {
         expiresAt.setFullYear(expiresAt.getFullYear() + 1)
       } else {
         expiresAt.setMonth(expiresAt.getMonth() + 1)
@@ -75,13 +100,13 @@ serve(async (req) => {
       await adminClient
         .from('profiles')
         .update({ is_premium: true })
-        .eq('id', userId)
+        .eq('id', targetUserId)
 
       await adminClient
         .from('subscriptions')
         .insert({
-          user_id: userId,
-          plan: planName.toLowerCase(),
+          user_id: targetUserId,
+          plan: targetPlanName.toLowerCase(),
           status: 'active',
           started_at: new Date().toISOString(),
           expires_at: expiresAt.toISOString(),

@@ -7,13 +7,16 @@ const corsHeaders = {
 
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL') || ''
 const SUPABASE_ANON_KEY = Deno.env.get('SUPABASE_ANON_KEY') || ''
+const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') || ''
 
 async function supabaseQuery(path, options = {}) {
   const url = `${SUPABASE_URL}/rest/v1/${path}`
+  const key = options.useServiceRole ? SUPABASE_SERVICE_ROLE_KEY : SUPABASE_ANON_KEY
+  const token = options.useServiceRole ? SUPABASE_SERVICE_ROLE_KEY : (options.token || SUPABASE_ANON_KEY)
   const res = await fetch(url, {
     headers: {
-      'apikey': SUPABASE_ANON_KEY,
-      'Authorization': `Bearer ${options.token || SUPABASE_ANON_KEY}`,
+      'apikey': key,
+      'Authorization': `Bearer ${token}`,
       'Content-Type': 'application/json',
       ...options.headers,
     },
@@ -65,13 +68,13 @@ serve(async (req) => {
     }
 
     // Get eligible profiles
-    const { data: profiles } = await supabaseQuery('profiles?select=id,gender,seeking,city,interests,onboarding_data&onboarding_completed=eq.true&order=created_at.asc', { token })
+    const { data: profiles } = await supabaseQuery('profiles?select=id,gender,seeking,city,interests,onboarding_data&onboarding_completed=eq.true&order=created_at.asc', { useServiceRole: true })
     if (!profiles || profiles.length < 2) {
       return new Response(JSON.stringify({ matches: [], message: 'Need at least 2 users' }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } })
     }
 
     // Get existing matches
-    const { data: existingMatches } = await supabaseQuery('matches?select=user_a_id,user_b_id&status=in.(active,pending,reveal_requested,revealed)', { token })
+    const { data: existingMatches } = await supabaseQuery('matches?select=user_a_id,user_b_id&status=in.(active,pending,reveal_requested,revealed)', { useServiceRole: true })
     const alreadyMatched = new Set()
     if (existingMatches) {
       for (const m of existingMatches) {
@@ -104,7 +107,7 @@ serve(async (req) => {
       try {
         const { data: match } = await supabaseQuery('matches', {
           method: 'POST',
-          token,
+          useServiceRole: true,
           body: {
             user_a_id: aId,
             user_b_id: bId,

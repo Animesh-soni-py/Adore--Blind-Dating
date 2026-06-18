@@ -101,7 +101,10 @@ export default function Navbar() {
         Skip to content
       </a>
       <nav
-        className="fixed top-0 left-0 right-0 z-50 nav-blur-dark transition-all duration-300"
+        className={cn(
+          "fixed top-0 left-0 right-0 z-50 nav-blur-dark transition-all duration-300",
+          scrolled && "border-b border-white/5 bg-[#0F0A1E]/80"
+        )}
         role="navigation"
         aria-label="Main navigation"
       >

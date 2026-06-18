@@ -47,6 +47,29 @@ serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     )
 
+    // Fetch the order from the database first to prevent IDOR and get trusted details
+    const { data: order, error: orderError } = await supabaseClient
+      .from('payment_orders')
+      .select('user_id, plan_name, period, status')
+      .eq('razorpay_order_id', razorpayOrderId)
+      .maybeSingle()
+
+    if (orderError || !order) {
+      throw new Error(`Order not found: ${razorpayOrderId}`)
+    }
+
+    // Prevent double processing / replay attack
+    if (order.status === 'paid') {
+      return new Response(
+        JSON.stringify({ verified: true, message: 'Payment already processed' }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      )
+    }
+
+    const orderUserId = order.user_id;
+    const orderPlanName = order.plan_name;
+    const orderPeriod = order.period;
+
     // Update order status
     await supabaseClient
       .from('payment_orders')
@@ -57,9 +80,9 @@ serve(async (req) => {
       })
       .eq('razorpay_order_id', razorpayOrderId)
 
-    // Update user subscription
+    // Calculate subscription expiry
     const expiresAt = new Date()
-    if (period === 'yearly') {
+    if (orderPeriod === 'yearly') {
       expiresAt.setFullYear(expiresAt.getFullYear() + 1)
     } else {
       expiresAt.setMonth(expiresAt.getMonth() + 1)
@@ -71,14 +94,14 @@ serve(async (req) => {
       .update({
         is_premium: true,
       })
-      .eq('id', userId)
+      .eq('id', orderUserId)
 
     // Insert subscription record
     await supabaseClient
       .from('subscriptions')
       .insert({
-        user_id: userId,
-        plan: planName.toLowerCase(),
+        user_id: orderUserId,
+        plan: orderPlanName.toLowerCase(),
         status: 'active',
         started_at: new Date().toISOString(),
         expires_at: expiresAt.toISOString(),
@@ -87,7 +110,7 @@ serve(async (req) => {
       })
 
     return new Response(
-      JSON.stringify({ verified: true, plan: planName }),
+      JSON.stringify({ verified: true, plan: orderPlanName }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     )
   } catch (error) {
