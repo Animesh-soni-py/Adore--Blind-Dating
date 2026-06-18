@@ -3,9 +3,6 @@ import { supabase } from '../../lib/supabase';
 import { useAuth } from '../../hooks/useAuth';
 import { useToast } from '../../hooks/useToast';
 
-const ALLOWED = ['image/jpeg', 'image/png', 'image/webp'];
-const MAX_SIZE = 5 * 1024 * 1024;
-
 export default function PhotoUpload({ currentUrl, onUpload }) {
   const { user } = useAuth();
   const toast = useToast();
@@ -19,11 +16,12 @@ export default function PhotoUpload({ currentUrl, onUpload }) {
     if (!file) return;
     setErrorMsg('');
 
-    if (!ALLOWED.includes(file.type)) {
+    const allowed = ['image/jpeg', 'image/png', 'image/webp'];
+    if (!allowed.includes(file.type)) {
       const msg = 'Please upload JPG, PNG, or WebP.';
       setErrorMsg(msg); toast.error(msg); return;
     }
-    if (file.size > MAX_SIZE) {
+    if (file.size > 5 * 1024 * 1024) {
       const msg = 'Image must be under 5MB.';
       setErrorMsg(msg); toast.error(msg); return;
     }
@@ -35,41 +33,33 @@ export default function PhotoUpload({ currentUrl, onUpload }) {
     try {
       setUploading(true);
 
-      if (!user?.id) throw new Error('User not authenticated — please log in again.');
+      if (!user?.id) throw new Error('Not logged in.');
 
       const ext = file.name.split('.').pop();
       const filePath = `${user.id}/avatar.${ext}`;
-      const url = `${import.meta.env.VITE_SUPABASE_URL}/storage/v1/object/profile-photos/${filePath}`;
-      const anonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
-      // Upload via direct fetch to rule out supabase-js storage client issues
-      const uploadRes = await fetch(url, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${anonKey}`,
-          'apikey': anonKey,
-          'Content-Type': file.type,
-          'x-upsert': 'true',
-        },
-        body: file,
-      });
+      // Use supabase client (sends user session token automatically)
+      const { error: uploadError } = await supabase.storage
+        .from('profile-photos')
+        .upload(filePath, file, { upsert: true });
 
-      if (!uploadRes.ok) {
-        const text = await uploadRes.text().catch(() => '');
-        throw new Error(`Upload failed (${uploadRes.status}): ${text || uploadRes.statusText}`);
-      }
+      if (uploadError) throw new Error(`Upload: ${uploadError.message}`);
 
-      // Build the public URL
-      const publicUrl = `${import.meta.env.VITE_SUPABASE_URL}/storage/v1/object/public/profile-photos/${filePath}?t=${Date.now()}`;
+      // Get the public URL
+      const { data: { publicUrl } } = supabase.storage
+        .from('profile-photos')
+        .getPublicUrl(filePath);
+
+      const url = `${publicUrl}?t=${Date.now()}`;
 
       const { error: updateError } = await supabase
         .from('profiles')
-        .update({ profile_photo_url: publicUrl })
+        .update({ profile_photo_url: url })
         .eq('id', user.id);
 
-      if (updateError) throw new Error(`Profile update error: ${updateError.message}`);
+      if (updateError) throw new Error(`Profile: ${updateError.message}`);
 
-      setPreview(publicUrl);
+      setPreview(url);
       setErrorMsg('');
       onUpload?.();
       toast.success('Photo uploaded!');
@@ -79,45 +69,6 @@ export default function PhotoUpload({ currentUrl, onUpload }) {
       setPreview(currentUrl || null);
     } finally {
       setUploading(false);
-    }
-  }
-
-  async function testStorage() {
-    setErrorMsg('');
-    try {
-      const testContent = new Blob(['test'], { type: 'text/plain' });
-      const testPath = `${user.id}/_test.txt`;
-      const url = `${import.meta.env.VITE_SUPABASE_URL}/storage/v1/object/profile-photos/${testPath}`;
-      const anonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
-
-      console.log('Testing storage...');
-      console.log('URL:', url);
-      console.log('Anon key exists:', !!anonKey);
-
-      const res = await fetch(url, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${anonKey}`,
-          'apikey': anonKey,
-          'Content-Type': 'text/plain',
-          'x-upsert': 'true',
-        },
-        body: testContent,
-      });
-
-      console.log('Response status:', res.status);
-
-      if (res.ok) {
-        setErrorMsg('Storage WORKS! Upload successful.');
-        toast.success('Storage test passed!');
-      } else {
-        const text = await res.text().catch(() => '');
-        setErrorMsg(`Storage FAILED (${res.status}): ${text.substring(0, 200)}`);
-        toast.error('Storage test failed - see red text');
-      }
-    } catch (err) {
-      setErrorMsg(`EXCEPTION: ${err.message}`);
-      toast.error(err.message);
     }
   }
 
@@ -139,6 +90,24 @@ export default function PhotoUpload({ currentUrl, onUpload }) {
       toast.error(err.message);
     } finally {
       setUploading(false);
+    }
+  }
+
+  async function testStorage() {
+    setErrorMsg('');
+    if (!user?.id) { setErrorMsg('Not logged in'); return; }
+    try {
+      const blob = new Blob(['test'], { type: 'text/plain' });
+      const path = `${user.id}/_test.txt`;
+      const { error } = await supabase.storage
+        .from('profile-photos')
+        .upload(path, blob, { upsert: true });
+      if (error) throw error;
+      setErrorMsg('Storage works!');
+      toast.success('Storage OK');
+    } catch (err) {
+      setErrorMsg(`Storage error: ${err.message}`);
+      toast.error(err.message);
     }
   }
 
@@ -186,16 +155,6 @@ export default function PhotoUpload({ currentUrl, onUpload }) {
         <p className="text-xs text-red-400 font-body text-center max-w-[300px] break-words bg-red-900/20 px-3 py-2 rounded-lg">
           {errorMsg}
         </p>
-      )}
-
-      {!uploading && (
-        <button
-          onClick={testStorage}
-          type="button"
-          className="text-[10px] text-white/20 hover:text-white/40 underline underline-offset-2"
-        >
-          🔧 Test storage (debug)
-        </button>
       )}
 
       {preview && !uploading && (
