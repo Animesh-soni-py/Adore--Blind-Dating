@@ -281,32 +281,34 @@ export default function PhotoUpload({ currentUrl, onUpload }) {
         JPG, PNG or WebP · Max 5MB — Click the circle to upload
       </p>
 
-      {/* Visual Debug Panel */}
-      <div className="w-full mt-4 p-4 rounded-xl bg-white/5 border border-white/10 text-left">
-        <div className="flex justify-between items-center mb-2">
-          <span className="text-xs font-bold text-pink uppercase tracking-wider">Upload Debug Logs</span>
-          {logs.length > 0 && (
-            <button
-              onClick={clearLogs}
-              type="button"
-              className="text-[10px] text-white/40 hover:text-white/80 transition-colors bg-transparent border-0 cursor-pointer"
-            >
-              Clear Logs
-            </button>
-          )}
+      {/* Visual Debug Panel (Only shown in debug mode via URL parameter ?debug=true) */}
+      {typeof window !== 'undefined' && new URLSearchParams(window.location.search).get('debug') === 'true' && (
+        <div className="w-full mt-4 p-4 rounded-xl bg-white/5 border border-white/10 text-left">
+          <div className="flex justify-between items-center mb-2">
+            <span className="text-xs font-bold text-pink uppercase tracking-wider">Upload Debug Logs</span>
+            {logs.length > 0 && (
+              <button
+                onClick={clearLogs}
+                type="button"
+                className="text-[10px] text-white/40 hover:text-white/80 transition-colors bg-transparent border-0 cursor-pointer"
+              >
+                Clear Logs
+              </button>
+            )}
+          </div>
+          <div className="max-h-40 overflow-y-auto font-mono text-[10px] text-white/60 space-y-1 bg-[#0F0A1E]/40 p-2 rounded border border-white/5">
+            {logs.length === 0 ? (
+              <span className="text-white/20 italic">No logs yet. Select a photo to begin.</span>
+            ) : (
+              logs.map((log, idx) => (
+                <div key={idx} className={`break-all ${log.includes('[ERROR]') ? 'text-red-400 font-semibold' : log.includes('[WARN]') ? 'text-yellow-400' : ''}`}>
+                  {log}
+                </div>
+              ))
+            )}
+          </div>
         </div>
-        <div className="max-h-40 overflow-y-auto font-mono text-[10px] text-white/60 space-y-1 bg-[#0F0A1E]/40 p-2 rounded border border-white/5">
-          {logs.length === 0 ? (
-            <span className="text-white/20 italic">No logs yet. Select a photo to begin.</span>
-          ) : (
-            logs.map((log, idx) => (
-              <div key={idx} className={`break-all ${log.includes('[ERROR]') ? 'text-red-400 font-semibold' : log.includes('[WARN]') ? 'text-yellow-400' : ''}`}>
-                {log}
-              </div>
-            ))
-          )}
-        </div>
-      </div>
+      )}
     </div>
   );
 }
