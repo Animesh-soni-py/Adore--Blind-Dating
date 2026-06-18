@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react';
+import { useState } from 'react';
 import { supabase } from '../../lib/supabase';
 import { useAuth } from '../../hooks/useAuth';
 import { useToast } from '../../hooks/useToast';
@@ -71,7 +71,6 @@ function sanitizeAndResizeImage(file, maxDimension = 1200) {
 export default function PhotoUpload({ currentUrl, onUpload }) {
   const { user } = useAuth();
   const toast = useToast();
-  const fileRef = useRef(null);
   const [preview, setPreview] = useState(currentUrl || null);
   const [prevUrl, setPrevUrl] = useState(currentUrl);
   const [uploading, setUploading] = useState(false);
@@ -196,11 +195,7 @@ export default function PhotoUpload({ currentUrl, onUpload }) {
   return (
     <div className="flex flex-col items-center gap-4">
       <div
-        className="relative w-28 h-28 rounded-full bg-gradient-to-br from-pink/20 to-lavender/20 border-2 border-dashed border-white/20 flex items-center justify-center overflow-hidden cursor-pointer group"
-        onClick={() => fileRef.current?.click()}
-        role="button"
-        tabIndex={0}
-        onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') fileRef.current?.click(); }}
+        className="relative w-28 h-28 rounded-full bg-gradient-to-br from-pink/20 to-lavender/20 border-2 border-dashed border-white/20 flex items-center justify-center overflow-hidden group"
       >
         {preview ? (
           <img src={preview} alt="Profile" className="w-full h-full object-cover" />
@@ -222,16 +217,17 @@ export default function PhotoUpload({ currentUrl, onUpload }) {
             <div className="w-6 h-6 border-2 border-pink border-t-transparent rounded-full animate-spin" />
           </div>
         )}
-      </div>
 
-      <input
-        ref={fileRef}
-        type="file"
-        accept=".jpg,.jpeg,.png,.webp"
-        onChange={handleFileSelect}
-        className="hidden"
-        aria-label="Upload profile photo"
-      />
+        {/* Transparent absolute overlay input makes click handling browser-native and 100% robust */}
+        <input
+          type="file"
+          accept=".jpg,.jpeg,.png,.webp"
+          onChange={handleFileSelect}
+          className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
+          aria-label="Upload profile photo"
+          disabled={uploading}
+        />
+      </div>
 
       {errorMsg && (
         <p className="text-xs text-red-400 font-body text-center max-w-[300px] break-words bg-red-900/20 px-3 py-2 rounded-lg">
@@ -242,7 +238,7 @@ export default function PhotoUpload({ currentUrl, onUpload }) {
       {preview && !uploading && (
         <button
           onClick={handleRemove}
-          className="text-xs text-white/40 hover:text-coral transition-colors font-body"
+          className="text-xs text-white/40 hover:text-coral transition-colors font-body z-20"
         >
           Remove photo
         </button>
