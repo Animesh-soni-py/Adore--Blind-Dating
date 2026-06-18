@@ -3,25 +3,29 @@ import { supabase } from '../../lib/supabase';
 import { useAuth } from '../../hooks/useAuth';
 import { useToast } from '../../hooks/useToast';
 
+const ALLOWED = ['image/jpeg', 'image/png', 'image/webp'];
+const MAX_SIZE = 5 * 1024 * 1024;
+
 export default function PhotoUpload({ currentUrl, onUpload }) {
   const { user } = useAuth();
   const toast = useToast();
   const fileRef = useRef(null);
   const [preview, setPreview] = useState(currentUrl || null);
   const [uploading, setUploading] = useState(false);
+  const [errorMsg, setErrorMsg] = useState('');
 
   async function handleFileSelect(e) {
     const file = e.target.files?.[0];
     if (!file) return;
+    setErrorMsg('');
 
-    const allowed = ['image/jpeg', 'image/png', 'image/webp'];
-    if (!allowed.includes(file.type)) {
-      toast.error('Please upload a JPG, PNG, or WebP image.');
-      return;
+    if (!ALLOWED.includes(file.type)) {
+      const msg = 'Please upload JPG, PNG, or WebP.';
+      setErrorMsg(msg); toast.error(msg); return;
     }
-    if (file.size > 5 * 1024 * 1024) {
-      toast.error('Image must be under 5MB.');
-      return;
+    if (file.size > MAX_SIZE) {
+      const msg = 'Image must be under 5MB.';
+      setErrorMsg(msg); toast.error(msg); return;
     }
 
     const reader = new FileReader();
@@ -30,46 +34,48 @@ export default function PhotoUpload({ currentUrl, onUpload }) {
 
     try {
       setUploading(true);
+
+      if (!user?.id) throw new Error('User not authenticated — please log in again.');
+
       const ext = file.name.split('.').pop();
       const filePath = `${user.id}/avatar.${ext}`;
+      const url = `${import.meta.env.VITE_SUPABASE_URL}/storage/v1/object/profile-photos/${filePath}`;
+      const anonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
-      console.log('Uploading to:', 'profile-photos', filePath);
+      // Upload via direct fetch to rule out supabase-js storage client issues
+      const uploadRes = await fetch(url, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${anonKey}`,
+          'apikey': anonKey,
+          'Content-Type': file.type,
+          'x-upsert': 'true',
+        },
+        body: file,
+      });
 
-      const { error: uploadError } = await supabase.storage
-        .from('profile-photos')
-        .upload(filePath, file, { upsert: true });
-
-      if (uploadError) {
-        console.error('Storage upload error:', uploadError);
-        throw uploadError;
+      if (!uploadRes.ok) {
+        const text = await uploadRes.text().catch(() => '');
+        throw new Error(`Upload failed (${uploadRes.status}): ${text || uploadRes.statusText}`);
       }
 
-      console.log('Upload successful');
-
-      const { data: { publicUrl } } = supabase.storage
-        .from('profile-photos')
-        .getPublicUrl(filePath);
-
-      const url = `${publicUrl}?t=${Date.now()}`;
-      console.log('Public URL:', url);
+      // Build the public URL
+      const publicUrl = `${import.meta.env.VITE_SUPABASE_URL}/storage/v1/object/public/profile-photos/${filePath}?t=${Date.now()}`;
 
       const { error: updateError } = await supabase
         .from('profiles')
-        .update({ profile_photo_url: url })
+        .update({ profile_photo_url: publicUrl })
         .eq('id', user.id);
 
-      if (updateError) {
-        console.error('Profile update error:', updateError);
-        throw updateError;
-      }
+      if (updateError) throw new Error(`Profile update error: ${updateError.message}`);
 
-      console.log('Profile updated');
-      setPreview(url);
-      onUpload?.(url);
-      toast.success('Photo uploaded! 📸');
+      setPreview(publicUrl);
+      setErrorMsg('');
+      onUpload?.();
+      toast.success('Photo uploaded!');
     } catch (err) {
-      console.error('Full upload error:', err);
-      toast.error(err.message || 'Failed to upload photo');
+      setErrorMsg(err.message);
+      toast.error(err.message);
       setPreview(currentUrl || null);
     } finally {
       setUploading(false);
@@ -79,19 +85,19 @@ export default function PhotoUpload({ currentUrl, onUpload }) {
   async function handleRemove() {
     try {
       setUploading(true);
-      const { error: updateError } = await supabase
+      setErrorMsg('');
+      const { error } = await supabase
         .from('profiles')
         .update({ profile_photo_url: null })
         .eq('id', user.id);
-
-      if (updateError) throw updateError;
-
+      if (error) throw error;
       setPreview(null);
-      onUpload?.(null);
+      setErrorMsg('');
+      onUpload?.();
       toast.success('Photo removed.');
     } catch (err) {
-      console.error('Remove error:', err);
-      toast.error(err.message || 'Failed to remove photo');
+      setErrorMsg(err.message);
+      toast.error(err.message);
     } finally {
       setUploading(false);
     }
@@ -102,13 +108,16 @@ export default function PhotoUpload({ currentUrl, onUpload }) {
       <div
         className="relative w-28 h-28 rounded-full bg-gradient-to-br from-pink/20 to-lavender/20 border-2 border-dashed border-white/20 flex items-center justify-center overflow-hidden cursor-pointer group"
         onClick={() => fileRef.current?.click()}
+        role="button"
+        tabIndex={0}
+        onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') fileRef.current?.click(); }}
       >
         {preview ? (
           <img src={preview} alt="Profile" className="w-full h-full object-cover" />
         ) : (
           <div className="text-center">
             <span className="text-2xl block mb-1">📷</span>
-            <span className="text-[10px] text-white/40 font-body">Add Photo</span>
+            <span className="text-[10px] text-white/40 font-body">Click to add photo</span>
           </div>
         )}
 
@@ -134,6 +143,12 @@ export default function PhotoUpload({ currentUrl, onUpload }) {
         aria-label="Upload profile photo"
       />
 
+      {errorMsg && (
+        <p className="text-xs text-red-400 font-body text-center max-w-[300px] break-words bg-red-900/20 px-3 py-2 rounded-lg">
+          {errorMsg}
+        </p>
+      )}
+
       {preview && !uploading && (
         <button
           onClick={handleRemove}
@@ -144,9 +159,8 @@ export default function PhotoUpload({ currentUrl, onUpload }) {
       )}
 
       <p className="text-xs text-white/30 font-body text-center">
-        JPG, PNG or WebP · Max 5MB
+        JPG, PNG or WebP · Max 5MB — Click the circle to upload
       </p>
     </div>
   );
 }
-
