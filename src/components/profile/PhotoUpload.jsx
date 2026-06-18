@@ -61,8 +61,14 @@ export default function PhotoUpload({ currentUrl, onUpload }) {
   const toast = useToast();
   const fileRef = useRef(null);
   const [preview, setPreview] = useState(currentUrl || null);
+  const [prevUrl, setPrevUrl] = useState(currentUrl);
   const [uploading, setUploading] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
+
+  if (currentUrl !== prevUrl) {
+    setPreview(currentUrl || null);
+    setPrevUrl(currentUrl);
+  }
 
   async function handleFileSelect(e) {
     const file = e.target.files?.[0];
