@@ -14,9 +14,8 @@ export default function PhotoUpload({ currentUrl, onUpload }) {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    // Validate file
-    const validTypes = ['image/jpeg', 'image/png', 'image/webp'];
-    if (!validTypes.includes(file.type)) {
+    const allowed = ['image/jpeg', 'image/png', 'image/webp'];
+    if (!allowed.includes(file.type)) {
       toast.error('Please upload a JPG, PNG, or WebP image.');
       return;
     }
@@ -25,43 +24,51 @@ export default function PhotoUpload({ currentUrl, onUpload }) {
       return;
     }
 
-    // Preview
     const reader = new FileReader();
     reader.onload = (event) => setPreview(event.target.result);
     reader.readAsDataURL(file);
 
-    // Upload
     try {
       setUploading(true);
       const ext = file.name.split('.').pop();
       const filePath = `${user.id}/avatar.${ext}`;
 
+      console.log('Uploading to:', 'profile-photos', filePath);
+
       const { error: uploadError } = await supabase.storage
         .from('profile-photos')
         .upload(filePath, file, { upsert: true });
 
-      if (uploadError) throw uploadError;
+      if (uploadError) {
+        console.error('Storage upload error:', uploadError);
+        throw uploadError;
+      }
+
+      console.log('Upload successful');
 
       const { data: { publicUrl } } = supabase.storage
         .from('profile-photos')
         .getPublicUrl(filePath);
 
-      // Add cache-buster
       const url = `${publicUrl}?t=${Date.now()}`;
+      console.log('Public URL:', url);
 
-      // Update profile
       const { error: updateError } = await supabase
         .from('profiles')
         .update({ profile_photo_url: url })
         .eq('id', user.id);
 
-      if (updateError) throw updateError;
+      if (updateError) {
+        console.error('Profile update error:', updateError);
+        throw updateError;
+      }
 
+      console.log('Profile updated');
       setPreview(url);
       onUpload?.(url);
       toast.success('Photo uploaded! 📸');
     } catch (err) {
-      console.error('Upload error:', err);
+      console.error('Full upload error:', err);
       toast.error(err.message || 'Failed to upload photo');
       setPreview(currentUrl || null);
     } finally {
@@ -72,7 +79,6 @@ export default function PhotoUpload({ currentUrl, onUpload }) {
   async function handleRemove() {
     try {
       setUploading(true);
-
       const { error: updateError } = await supabase
         .from('profiles')
         .update({ profile_photo_url: null })
@@ -84,6 +90,7 @@ export default function PhotoUpload({ currentUrl, onUpload }) {
       onUpload?.(null);
       toast.success('Photo removed.');
     } catch (err) {
+      console.error('Remove error:', err);
       toast.error(err.message || 'Failed to remove photo');
     } finally {
       setUploading(false);
@@ -105,14 +112,12 @@ export default function PhotoUpload({ currentUrl, onUpload }) {
           </div>
         )}
 
-        {/* Overlay */}
         <div className="absolute inset-0 bg-[#0F0A1E]/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center rounded-full">
           <span className="text-white text-xs font-semibold">
             {preview ? 'Change' : 'Upload'}
           </span>
         </div>
 
-        {/* Loading overlay */}
         {uploading && (
           <div className="absolute inset-0 bg-[#0F0A1E]/80 flex items-center justify-center rounded-full">
             <div className="w-6 h-6 border-2 border-pink border-t-transparent rounded-full animate-spin" />
@@ -144,3 +149,4 @@ export default function PhotoUpload({ currentUrl, onUpload }) {
     </div>
   );
 }
+

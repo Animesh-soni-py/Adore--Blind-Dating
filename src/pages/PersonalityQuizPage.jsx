@@ -231,8 +231,6 @@ const categoryIcons = {
   travel_style: '✈️',
 };
 
-const QUESTIONS_PER_PAGE = 4;
-
 const cardVariants = {
   hidden: { opacity: 0, y: 30, scale: 0.97 },
   visible: (i) => ({
@@ -267,13 +265,10 @@ function QuizInner() {
   const toast = useToast();
   const [answers, setAnswers] = useState({});
   const [submitting, setSubmitting] = useState(false);
-  const [visibleCount, setVisibleCount] = useState(QUESTIONS_PER_PAGE);
   const [justSelected, setJustSelected] = useState(null);
-  const containerRef = useRef(null);
   const questionRefs = useRef({});
 
   const totalQuestions = questions.length;
-  const allVisible = visibleCount >= totalQuestions;
   const answeredCount = questions.filter((q) => {
     const a = answers[q.key];
     if (a === null || a === undefined) return false;
@@ -293,19 +288,14 @@ function QuizInner() {
     setAnswer(key, value);
     setJustSelected(key);
     const idx = questions.findIndex((q) => q.key === key);
-    const nextIdx = idx + 1;
-    if (nextIdx < totalQuestions) {
+    if (idx < totalQuestions - 1) {
       setTimeout(() => {
-        const nextEl = questionRefs.current[questions[nextIdx].key];
+        const nextEl = questionRefs.current[questions[idx + 1].key];
         if (nextEl) {
           nextEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
         }
         setJustSelected(null);
       }, 400);
-
-      if (nextIdx >= visibleCount) {
-        setVisibleCount((prev) => Math.min(prev + QUESTIONS_PER_PAGE, totalQuestions));
-      }
     }
   }
 
@@ -320,16 +310,6 @@ function QuizInner() {
 
   function handleSkip(key) {
     setAnswer(key, null);
-  }
-
-  function handleShowMore() {
-    setVisibleCount((prev) => Math.min(prev + QUESTIONS_PER_PAGE, totalQuestions));
-    setTimeout(() => {
-      const nextQ = questions[visibleCount];
-      if (nextQ && questionRefs.current[nextQ.key]) {
-        questionRefs.current[nextQ.key].scrollIntoView({ behavior: 'smooth', block: 'center' });
-      }
-    }, 100);
   }
 
   function allRequiredAnswered() {
@@ -367,7 +347,6 @@ function QuizInner() {
 
   return (
     <main
-        ref={containerRef}
         className="pt-[72px] min-h-screen overflow-y-auto"
         style={{ background: 'linear-gradient(180deg, #0F0A1E 0%, #1A1A2E 100%)' }}
         id="main-content"
@@ -408,7 +387,7 @@ function QuizInner() {
             initial="hidden"
             animate="visible"
           >
-            {questions.slice(0, visibleCount).map((q, idx) => (
+            {questions.map((q, idx) => (
               <motion.div
                 key={q.key}
                 ref={(el) => { questionRefs.current[q.key] = el; }}
@@ -566,35 +545,21 @@ function QuizInner() {
             animate={{ opacity: 1 }}
             transition={{ delay: 0.3 }}
           >
-            {!allVisible && (
-              <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
-                <Button
-                  variant="ghost"
-                  size="md"
-                  onClick={handleShowMore}
-                >
-                  Load More Questions ↓
-                </Button>
-              </motion.div>
-            )}
-
-            {allVisible && (
-              <motion.div
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.2 }}
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.2 }}
+            >
+              <Button
+                variant="primary"
+                size="lg"
+                onClick={handleSubmit}
+                disabled={!allRequiredAnswered() || submitting || profileLoading}
+                loading={submitting}
               >
-                <Button
-                  variant="primary"
-                  size="lg"
-                  onClick={handleSubmit}
-                  disabled={!allRequiredAnswered() || submitting || profileLoading}
-                  loading={submitting}
-                >
-                  {allRequiredAnswered() ? 'Complete Quiz' : `${totalQuestions - answeredCount - skippedCount} unanswered, ${skippedCount} skipped`}
-                </Button>
-              </motion.div>
-            )}
+                {allRequiredAnswered() ? 'Complete Quiz' : `${totalQuestions - answeredCount - skippedCount} unanswered, ${skippedCount} skipped`}
+              </Button>
+            </motion.div>
           </motion.div>
         </div>
       </main>
